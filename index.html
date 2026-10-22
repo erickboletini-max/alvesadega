@@ -128,8 +128,8 @@
           <div class="w-16 h-16 rounded-xl overflow-hidden mx-auto mb-3 border border-neutral-800">
             <img id="logo-admin-auth" src="./ALVES_ADEGA_LOGO.jpeg" alt="Alves Adega" class="w-full h-full object-cover">
           </div>
-          <h3 class="text-lg font-bold text-white mb-1">Painel do Gestor</h3>
-          <p class="text-neutral-400 text-xs mb-4">Insira o PIN de 4 dígitos</p>
+          <h3 class="text-lg font-bold text-white mb-1">Painel da Adega</h3>
+          <p class="text-neutral-400 text-xs mb-4">Insira seu PIN de 4 dígitos (Dono ou Funcionário)</p>
           <input type="password" id="admin-pin-input" maxlength="4" placeholder="••••" class="w-full text-center text-2xl tracking-widest bg-neutral-950 border border-neutral-800 rounded-xl py-2 text-white mb-4 focus:outline-none focus:border-brand-500">
           <button onclick="authenticateAdmin()" class="w-full py-2.5 bg-brand-600 hover:bg-brand-500 text-white font-semibold rounded-xl shadow-lg transition">Acessar Painel</button>
         </div>
@@ -142,19 +142,22 @@
               <img id="logo-admin-header" src="./ALVES_ADEGA_LOGO.jpeg" alt="Alves Adega" class="w-full h-full object-cover">
             </div>
             <div>
-              <h2 class="text-xl font-bold text-white">Painel de Controle - Alves Adega</h2>
-              <p class="text-xs text-neutral-400">Pedidos, PDV Balcão, Busca por ID, Estoque, Relatórios e Fechamento do Motoboy.</p>
+              <h2 class="text-xl font-bold text-white flex items-center gap-2">
+                Painel de Controle 
+                <span id="role-badge" class="text-xs px-2 py-0.5 rounded-full font-semibold bg-brand-600/20 text-brand-400 border border-brand-500/30"></span>
+              </h2>
+              <p class="text-xs text-neutral-400">Gerenciamento de Pedidos, PDV Balcão e Operações da Alves Adega.</p>
             </div>
           </div>
           <div class="flex flex-wrap items-center gap-2">
             <button onclick="playNotificationSound()" class="px-3 py-2 bg-neutral-800 hover:bg-neutral-700 text-amber-400 border border-amber-500/30 rounded-xl text-xs font-semibold flex items-center gap-1.5 shadow transition">
               <i class="fa-solid fa-bell"></i> Testar Sino
             </button>
-            <button onclick="openProductModal()" class="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 shadow transition">
+            <button id="btn-owner-add-product" onclick="openProductModal()" class="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 shadow transition">
               <i class="fa-solid fa-plus"></i> Novo Produto
             </button>
-            <button onclick="resetDefaultProducts()" class="px-3 py-2 bg-neutral-800 hover:bg-neutral-700 text-amber-400 border border-amber-500/30 rounded-xl text-xs font-semibold flex items-center gap-1.5 shadow transition">
-              <i class="fa-solid fa-rotate-left"></i> Carregar Todos os 115 Produtos
+            <button id="btn-owner-reset-products" onclick="resetDefaultProducts()" class="px-3 py-2 bg-neutral-800 hover:bg-neutral-700 text-amber-400 border border-amber-500/30 rounded-xl text-xs font-semibold flex items-center gap-1.5 shadow transition">
+              <i class="fa-solid fa-rotate-left"></i> Carregar Todos os Produtos
             </button>
           </div>
         </div>
@@ -465,6 +468,7 @@
           </div>
         </div>
 
+        <!-- ABA PRODUTOS / ESTOQUE (RESTRITA AO DONO) -->
         <div id="admin-tab-produtos" class="hidden space-y-6">
           <div class="overflow-x-auto bg-neutral-900 border border-neutral-800 rounded-2xl">
             <table class="w-full text-left text-sm text-neutral-300">
@@ -472,8 +476,8 @@
                 <tr>
                   <th class="p-4">Produto</th>
                   <th class="p-4">Categoria</th>
-                  <th class="p-4">Sabores/Opções</th>
-                  <th class="p-4">Preço (R$)</th>
+                  <th class="p-4">Sabores/Variantes</th>
+                  <th class="p-4">Preço Base (R$)</th>
                   <th class="p-4 text-right">Ações</th>
                 </tr>
               </thead>
@@ -482,7 +486,7 @@
           </div>
         </div>
 
-        <!-- ABA CONFIGURAÇÕES -->
+        <!-- ABA CONFIGURAÇÕES (RESTRITA AO DONO) -->
         <div id="admin-tab-config" class="hidden space-y-6 max-w-2xl bg-neutral-900 border border-neutral-800 p-6 rounded-2xl">
           <h3 class="text-lg font-bold text-white mb-2 flex items-center gap-2">
             <i class="fa-solid fa-sliders text-brand-500"></i> Configurações Gerais
@@ -539,17 +543,17 @@
 
             <div class="bg-neutral-950 border border-neutral-800 p-4 rounded-xl space-y-3">
               <label class="block text-xs font-bold text-neutral-300 uppercase tracking-wider flex items-center gap-2">
-                <i class="fa-solid fa-key text-brand-500"></i> Segurança - Alterar PIN do Painel
+                <i class="fa-solid fa-key text-brand-500"></i> Segurança - PINs de Acesso
               </label>
               
               <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label class="block text-xs text-neutral-400 mb-1">Novo PIN (4 dígitos):</label>
-                  <input type="password" id="config-new-pin" maxlength="4" placeholder="Ex: 4321" class="w-full bg-neutral-900 border border-neutral-800 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-500 tracking-widest text-center">
+                  <label class="block text-xs text-neutral-400 mb-1">PIN do Dono (Acesso Geral):</label>
+                  <input type="password" id="config-owner-pin" maxlength="4" placeholder="Ex: 1234" class="w-full bg-neutral-900 border border-neutral-800 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-500 tracking-widest text-center font-bold">
                 </div>
                 <div>
-                  <label class="block text-xs text-neutral-400 mb-1">Confirmar Novo PIN:</label>
-                  <input type="password" id="config-confirm-pin" maxlength="4" placeholder="Ex: 4321" class="w-full bg-neutral-900 border border-neutral-800 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-500 tracking-widest text-center">
+                  <label class="block text-xs text-neutral-400 mb-1">PIN do Funcionário:</label>
+                  <input type="password" id="config-employee-pin" maxlength="4" placeholder="Ex: 5555" class="w-full bg-neutral-900 border border-neutral-800 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-500 tracking-widest text-center font-bold">
                 </div>
               </div>
             </div>
@@ -670,15 +674,20 @@
             </select>
           </div>
           <div>
-            <label class="block text-xs font-semibold text-neutral-400 mb-1">Preço (R$)</label>
+            <label class="block text-xs font-semibold text-neutral-400 mb-1">Preço Base (R$)</label>
             <input type="number" step="0.01" id="edit-price" required class="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-500">
           </div>
         </div>
 
         <div>
-          <label class="block text-xs font-semibold text-amber-400 mb-1 font-bold">Sabores / Opções Disponíveis (Separados por vírgula)</label>
+          <label class="block text-xs font-semibold text-amber-400 mb-1 font-bold">Opções de Tamanho/Dose e Preço</label>
+          <input type="text" id="edit-options" placeholder="Ex: Garrafa:45.00, Dose:7.00" class="w-full bg-neutral-950 border border-amber-500/30 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-amber-500">
+          <p class="text-[10px] text-neutral-500 mt-1">Formato: Nome:Preco, Nome:Preco (ex: Garrafa:45, Dose:7)</p>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-amber-400 mb-1 font-bold">Sabores Disponíveis (Separados por vírgula)</label>
           <input type="text" id="edit-flavors" placeholder="Ex: Melancia, Menta, Banana, Tropical" class="w-full bg-neutral-950 border border-amber-500/30 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-amber-500">
-          <p class="text-[10px] text-neutral-500 mt-1">Insira os sabores disponíveis desta marca. O cliente poderá escolher no cardápio.</p>
         </div>
 
         <div>
@@ -819,30 +828,30 @@
       { id: 107, name: "Energético Vibe", category: "Gelos & Energéticos", price: 10.00, desc: "Lata energético", image: "", available: true },
       { id: 108, name: "Energético Monster", category: "Gelos & Energéticos", price: 12.00, desc: "Lata 473ml", image: "", available: true },
       { id: 109, name: "Energético Red Bull 250ml", category: "Gelos & Energéticos", price: 12.00, desc: "Lata 250ml", image: "", available: true },
-      { id: 201, name: "Cachaça 51 1L", category: "Cachaças", price: 16.00, desc: "Garrafa 1L (Dose: R$ 4,00)", image: "", available: true },
+      { id: 201, name: "Cachaça 51 1L", category: "Cachaças", price: 16.00, options: "Garrafa:16.00, Dose:4.00", desc: "Escolha entre Garrafa ou Dose", image: "", available: true },
       { id: 202, name: "Aperol Aperitivo 750ml", category: "Cachaças", price: 60.00, desc: "Garrafa 750ml", image: "", available: true },
       { id: 203, name: "Rum Bacardi Carta Blanca 1L", category: "Cachaças", price: 50.00, desc: "Garrafa 1L", image: "", available: true },
       { id: 204, name: "Liqueur Bananinha 1L", category: "Cachaças", price: 45.00, desc: "Garrafa 1L", image: "", available: true },
-      { id: 205, name: "Campari Aperitivo 900ml", category: "Cachaças", price: 70.00, desc: "Garrafa 900ml (Dose: R$ 10,00)", image: "", available: true },
+      { id: 205, name: "Campari Aperitivo 900ml", category: "Cachaças", price: 70.00, options: "Garrafa:70.00, Dose:10.00", desc: "Escolha entre Garrafa ou Dose", image: "", available: true },
       { id: 206, name: "Cana Boa", category: "Cachaças", price: 3.00, desc: "Dose / Garrafinha", image: "", available: true },
       { id: 207, name: "Canelinha Garrafa", category: "Cachaças", price: 18.00, desc: "Aperitivo de Canela Garrafa", image: "", available: true },
       { id: 208, name: "Canelinha Copão", category: "Cachaças", price: 10.00, desc: "Copão preparado", image: "", available: true },
       { id: 209, name: "Combo Canelinha", category: "Combos", price: 38.00, desc: "Combo especial Canelinha", image: "", available: true },
       { id: 210, name: "Catuaba Selvagem 1L", category: "Cachaças", price: 18.00, desc: "Garrafa 1L", image: "", available: true },
-      { id: 211, name: "Vermouth Contini", category: "Cachaças", price: 35.00, desc: "Garrafa Contini (MM: R$ 5,00)", image: "", available: true },
+      { id: 211, name: "Vermouth Contini", category: "Cachaças", price: 35.00, options: "Garrafa:35.00, Meia Mão:5.00", desc: "Escolha entre Garrafa ou Meia Mão", image: "", available: true },
       { id: 212, name: "Corote Flavored 500ml", category: "Cachaças", price: 6.00, desc: "Coquetel alcoólico", image: "", available: true, flavors: "Pêssego, Limão, Morango, Mirtilo, Baunilha" },
-      { id: 213, name: "Cynar Aperitivo", category: "Cachaças", price: 30.00, desc: "Garrafa (Dose: R$ 5,00)", image: "", available: true },
-      { id: 214, name: "Conhaque Domecq 1L", category: "Cachaças", price: 45.00, desc: "Garrafa 1L (Dose: R$ 7,00)", image: "", available: true },
-      { id: 215, name: "Conhaque Dreher 900ml", category: "Cachaças", price: 26.00, desc: "Garrafa (Dose: R$ 4,00)", image: "", available: true },
+      { id: 213, name: "Cynar Aperitivo", category: "Cachaças", price: 30.00, options: "Garrafa:30.00, Dose:5.00", desc: "Escolha entre Garrafa ou Dose", image: "", available: true },
+      { id: 214, name: "Conhaque Domecq 1L", category: "Cachaças", price: 45.00, options: "Garrafa:45.00, Dose:7.00", desc: "Escolha entre Garrafa ou Dose", image: "", available: true },
+      { id: 215, name: "Conhaque Dreher 900ml", category: "Cachaças", price: 26.00, options: "Garrafa:26.00, Dose:4.00", desc: "Escolha entre Garrafa ou Dose", image: "", available: true },
       { id: 216, name: "Duelo Tradicional", category: "Cachaças", price: 3.50, desc: "Coquetel alcoólico", image: "", available: true },
       { id: 217, name: "Duelo Sabores", category: "Cachaças", price: 4.00, desc: "Sabores variados", image: "", available: true },
       { id: 218, name: "Gnutre Tradicional", category: "Cachaças", price: 15.00, desc: "Garrafa", image: "", available: true },
       { id: 219, name: "Gnutre Groselha", category: "Cachaças", price: 12.00, desc: "Sabor Groselha", image: "", available: true },
-      { id: 220, name: "Gin Golf", category: "Cachaças", price: 35.00, desc: "Garrafa (Dose: R$ 5,00)", image: "", available: true },
+      { id: 220, name: "Gin Golf", category: "Cachaças", price: 35.00, options: "Garrafa:35.00, Dose:5.00", desc: "Escolha entre Garrafa ou Dose", image: "", available: true },
       { id: 221, name: "Jurupinga 970ml", category: "Cachaças", price: 35.00, desc: "Vinho Suave Composto", image: "", available: true },
-      { id: 222, name: "Cachaça Kariri", category: "Cachaças", price: 22.00, desc: "Garrafa (Dose: R$ 7,00)", image: "", available: true },
+      { id: 222, name: "Cachaça Kariri", category: "Cachaças", price: 22.00, options: "Garrafa:22.00, Dose:7.00", desc: "Escolha entre Garrafa ou Dose", image: "", available: true },
       { id: 223, name: "Rum Montilla Carta Branca", category: "Cachaças", price: 45.00, desc: "Garrafa 1L", image: "", available: true },
-      { id: 224, name: "Aperitivo Para Tudo", category: "Cachaças", price: 16.00, desc: "Garrafa (Dose: R$ 4,00)", image: "", available: true },
+      { id: 224, name: "Aperitivo Para Tudo", category: "Cachaças", price: 16.00, options: "Garrafa:16.00, Dose:4.00", desc: "Escolha entre Garrafa ou Dose", image: "", available: true },
       { id: 225, name: "Pararine", category: "Cachaças", price: 18.00, desc: "Garrafa aperitivo", image: "", available: true },
       { id: 226, name: "Pitu 1L Tradicional", category: "Cachaças", price: 18.00, desc: "Cachaça Pitu Garrafa 1L", image: "", available: true },
       { id: 227, name: "Pitu Banana", category: "Cachaças", price: 7.00, desc: "Garrafinha saborizada", image: "", available: true },
@@ -853,28 +862,28 @@
       { id: 232, name: "Cabaré Ouro", category: "Cachaças", price: 52.00, desc: "Cachaça Cabaré Ouro Envelhecida", image: "", available: true },
       { id: 233, name: "Cabaré Amburana", category: "Cachaças", price: 65.00, desc: "Armazenada em tonéis de Amburana", image: "", available: true },
       { id: 234, name: "Cabaré Fire", category: "Cachaças", price: 70.00, desc: "Cachaça com Canela", image: "", available: true },
-      { id: 235, name: "Conhaque Presidente", category: "Cachaças", price: 20.00, desc: "Garrafa (Dose: R$ 4,00)", image: "", available: true },
+      { id: 235, name: "Conhaque Presidente", category: "Cachaças", price: 20.00, options: "Garrafa:20.00, Dose:4.00", desc: "Escolha entre Garrafa ou Dose", image: "", available: true },
       { id: 236, name: "Saquê Culinário / Bebida", category: "Cachaças", price: 25.00, desc: "Garrafa Saquê Azuma Kirin", image: "", available: true },
-      { id: 237, name: "Aperitivo São Francisco", category: "Cachaças", price: 32.00, desc: "Garrafa (Dose: R$ 5,00)", image: "", available: true },
+      { id: 237, name: "Aperitivo São Francisco", category: "Cachaças", price: 32.00, options: "Garrafa:32.00, Dose:5.00", desc: "Escolha entre Garrafa ou Dose", image: "", available: true },
       { id: 238, name: "Conhaque São João da Barra", category: "Cachaças", price: 30.00, desc: "Garrafa", image: "", available: true },
       { id: 239, name: "Cachaça Seleta 1L", category: "Cachaças", price: 50.00, desc: "Cachaça Artesanal Ouro", image: "", available: true },
-      { id: 240, name: "Velho Barreiro 910ml", category: "Cachaças", price: 16.00, desc: "Garrafa (Dose: R$ 4,00)", image: "", available: true },
+      { id: 240, name: "Velho Barreiro 910ml", category: "Cachaças", price: 16.00, options: "Garrafa:16.00, Dose:4.00", desc: "Escolha entre Garrafa ou Dose", image: "", available: true },
       { id: 241, name: "Cachaça Ypióca Ouro / Prata", category: "Cachaças", price: 50.00, desc: "Garrafa com Palha", image: "", available: true },
-      { id: 301, name: "Cerveja Amstel (Fardo / Lata)", category: "Cervejas", price: 37.00, desc: "Fardo de Latas (Unidade Lata: R$ 4,00)", image: "", available: true },
-      { id: 302, name: "Cerveja Brahma 269ml", category: "Cervejas", price: 46.00, desc: "Fardo de Latas (Unidade Lata: R$ 4,50)", image: "", available: true },
-      { id: 303, name: "Cerveja Brahma 350ml", category: "Cervejas", price: 48.00, desc: "Fardo de Latas (Unidade Lata: R$ 5,00)", image: "", available: true },
-      { id: 304, name: "Cerveja Budweiser Pack 8 Unid", category: "Cervejas", price: 28.00, desc: "Pack c/ 8 Latas (Lata Solta: R$ 3,50)", image: "", available: true },
-      { id: 305, name: "Cerveja Budweiser Pack 15 Unid", category: "Cervejas", price: 52.00, desc: "Pack c/ 15 Latas (Lata Solta: R$ 3,50)", image: "", available: true },
-      { id: 306, name: "Cerveja Heineken (Fardo / Lata)", category: "Cervejas", price: 38.00, desc: "Fardo de Latas (Lata Solta: R$ 5,00)", image: "", available: true },
-      { id: 307, name: "Cerveja Império (Fardo / Lata)", category: "Cervejas", price: 50.00, desc: "Fardo de Latas (Lata Solta: R$ 4,00)", image: "", available: true },
-      { id: 308, name: "Cerveja Itaipava 350ml (Fardo)", category: "Cervejas", price: 40.00, desc: "Fardo de Latas 350ml (Lata Solta: R$ 3,50)", image: "", available: true },
-      { id: 309, name: "Cerveja Itaipava Zero Álcool (Fardo)", category: "Cervejas", price: 60.00, desc: "Fardo Sem Álcool (Lata Solta: R$ 5,50)", image: "", available: true },
-      { id: 310, name: "Cerveja Original Pack 15 Unid", category: "Cervejas", price: 55.00, desc: "Pack c/ 15 Latas (Lata Solta: R$ 4,00)", image: "", available: true },
-      { id: 311, name: "Cerveja Skol Pack 8 Unid", category: "Cervejas", price: 32.00, desc: "Pack c/ 8 Latas (Lata Solta: R$ 4,00)", image: "", available: true },
-      { id: 312, name: "Cerveja Petra (Fardo / Lata)", category: "Cervejas", price: 34.00, desc: "Fardo de Latas (Lata Solta: R$ 3,00)", image: "", available: true },
-      { id: 313, name: "Cerveja Skol (Fardo / Lata)", category: "Cervejas", price: 42.00, desc: "Fardo de Latas (Lata Solta: R$ 3,50)", image: "", available: true },
-      { id: 314, name: "Cerveja Spaten (Fardo / Lata)", category: "Cervejas", price: 36.00, desc: "Fardo Munich Helles (Lata Solta: R$ 5,00)", image: "", available: true },
-      { id: 315, name: "Long Neck Budweiser (Fardo c/ 6)", category: "Cervejas", price: 48.00, desc: "Long Neck (Solta: R$ 8,00)", image: "", available: true },
+      { id: 301, name: "Cerveja Amstel (Fardo / Lata)", category: "Cervejas", price: 37.00, options: "Fardo:37.00, Lata Solta:4.00", desc: "Escolha Fardo ou Lata Solta", image: "", available: true },
+      { id: 302, name: "Cerveja Brahma 269ml", category: "Cervejas", price: 46.00, options: "Fardo:46.00, Lata Solta:4.50", desc: "Escolha Fardo ou Lata Solta", image: "", available: true },
+      { id: 303, name: "Cerveja Brahma 350ml", category: "Cervejas", price: 48.00, options: "Fardo:48.00, Lata Solta:5.00", desc: "Escolha Fardo ou Lata Solta", image: "", available: true },
+      { id: 304, name: "Cerveja Budweiser Pack 8 Unid", category: "Cervejas", price: 28.00, options: "Pack 8 Unidades:28.00, Lata Solta:3.50", desc: "Escolha Pack ou Lata Solta", image: "", available: true },
+      { id: 305, name: "Cerveja Budweiser Pack 15 Unid", category: "Cervejas", price: 52.00, options: "Pack 15 Unidades:52.00, Lata Solta:3.50", desc: "Escolha Pack ou Lata Solta", image: "", available: true },
+      { id: 306, name: "Cerveja Heineken (Fardo / Lata)", category: "Cervejas", price: 38.00, options: "Fardo:38.00, Lata Solta:5.00", desc: "Escolha Fardo ou Lata Solta", image: "", available: true },
+      { id: 307, name: "Cerveja Império (Fardo / Lata)", category: "Cervejas", price: 50.00, options: "Fardo:50.00, Lata Solta:4.00", desc: "Escolha Fardo ou Lata Solta", image: "", available: true },
+      { id: 308, name: "Cerveja Itaipava 350ml (Fardo)", category: "Cervejas", price: 40.00, options: "Fardo:40.00, Lata Solta:3.50", desc: "Escolha Fardo ou Lata Solta", image: "", available: true },
+      { id: 309, name: "Cerveja Itaipava Zero Álcool (Fardo)", category: "Cervejas", price: 60.00, options: "Fardo:60.00, Lata Solta:5.50", desc: "Escolha Fardo ou Lata Solta", image: "", available: true },
+      { id: 310, name: "Cerveja Skol Pack 15 Unid", category: "Cervejas", price: 55.00, options: "Pack 15 Unidades:55.00, Lata Solta:4.00", desc: "Escolha Pack ou Lata Solta", image: "", available: true },
+      { id: 311, name: "Cerveja Skol Pack 8 Unid", category: "Cervejas", price: 32.00, options: "Pack 8 Unidades:32.00, Lata Solta:4.00", desc: "Escolha Pack ou Lata Solta", image: "", available: true },
+      { id: 312, name: "Cerveja Petra (Fardo / Lata)", category: "Cervejas", price: 34.00, options: "Fardo:34.00, Lata Solta:3.00", desc: "Escolha Fardo ou Lata Solta", image: "", available: true },
+      { id: 313, name: "Cerveja Skol (Fardo / Lata)", category: "Cervejas", price: 42.00, options: "Fardo:42.00, Lata Solta:3.50", desc: "Escolha Fardo ou Lata Solta", image: "", available: true },
+      { id: 314, name: "Cerveja Spaten (Fardo / Lata)", category: "Cervejas", price: 36.00, options: "Fardo:36.00, Lata Solta:5.00", desc: "Escolha Fardo ou Lata Solta", image: "", available: true },
+      { id: 315, name: "Long Neck Budweiser (Fardo c/ 6)", category: "Cervejas", price: 48.00, options: "Fardo c/ 6:48.00, Solta:8.00", desc: "Escolha Fardo ou Unidade", image: "", available: true },
       { id: 316, name: "Long Neck Corona 330ml", category: "Cervejas", price: 8.00, desc: "Unidade Long Neck", image: "", available: true },
       { id: 317, name: "Long Neck Corona Zero", category: "Cervejas", price: 8.50, desc: "Unidade Long Neck Sem Álcool", image: "", available: true },
       { id: 318, name: "Long Neck Spaten", category: "Cervejas", price: 8.00, desc: "Unidade Long Neck", image: "", available: true },
@@ -887,9 +896,9 @@
       { id: 401, name: "Gin Beefeater Laranja 750ml", category: "Destilados", price: 200.00, desc: "Gin Beefeater Blood Orange", image: "", available: true },
       { id: 402, name: "Combo Gin Beefeater Laranja", category: "Combos", price: 240.00, desc: "1 Beefeater Laranja + Energéticos + Gelo de Sabor", image: "", available: true },
       { id: 403, name: "Gin Beefeater Sabores 750ml", category: "Destilados", price: 140.00, desc: "Beefeater Pink / Lemon", image: "", available: true },
-      { id: 404, name: "Combo Gin Beefeater Sabores", category: "Combos", price: 190.00, desc: "1 Beefeater Sabores + Energéticos (Copo: R$ 40,00)", image: "", available: true },
+      { id: 404, name: "Combo Gin Beefeater Sabores", category: "Combos", price: 190.00, options: "Combo Garrafa:190.00, Copão Preparado:40.00", desc: "Escolha Garrafa Combo ou Copão", image: "", available: true },
       { id: 405, name: "Gin Beefeater Tradicional 750ml", category: "Destilados", price: 120.00, desc: "London Dry 750ml", image: "", available: true },
-      { id: 406, name: "Combo Gin Beefeater Tradicional", category: "Combos", price: 160.00, desc: "1 Beefeater Tradicional + Energéticos (Copo: R$ 35,00)", image: "", available: true },
+      { id: 406, name: "Combo Gin Beefeater Tradicional", category: "Combos", price: 160.00, options: "Combo Garrafa:160.00, Copão Preparado:35.00", desc: "Escolha Garrafa Combo ou Copão", image: "", available: true },
       { id: 407, name: "Gin Bombay Sapphire 750ml", category: "Destilados", price: 120.00, desc: "London Dry Importado", image: "", available: true },
       { id: 408, name: "Combo Gin Bombay Sapphire", category: "Combos", price: 165.00, desc: "1 Bombay Sapphire + Energéticos + Gelo", image: "", available: true },
       { id: 409, name: "Gin Eternity 900ml", category: "Destilados", price: 30.00, desc: "Garrafa de Gin", image: "", available: true },
@@ -950,7 +959,7 @@
       { id: 716, name: "Prato para Narguile", category: "Tabacaria", price: 20.00, desc: "Prato de alumínio", image: "", available: true },
       { id: 717, name: "Piteira Pequena", category: "Tabacaria", price: 5.00, desc: "Piteira higiênica", image: "", available: true },
       { id: 718, name: "Piteira Longa", category: "Tabacaria", price: 6.00, desc: "Piteira higiênica longa", image: "", available: true },
-      { id: 719, name: "Seda Zomo", category: "Tabacaria", price: 5.00, desc: "Seda (Solta: R$ 0,50)", image: "", available: true },
+      { id: 719, name: "Seda Zomo", category: "Tabacaria", price: 5.00, options: "Livreto:5.00, Solta:0.50", desc: "Escolha Livreto ou Folha Solta", image: "", available: true },
       { id: 720, name: "Seda Sadhu Tradicional", category: "Tabacaria", price: 6.00, desc: "Livreto de seda", image: "", available: true },
       { id: 721, name: "Seda Sadhu Longa", category: "Tabacaria", price: 8.00, desc: "Livreto King Size", image: "", available: true },
       { id: 722, name: "Tabaco Crema", category: "Tabacaria", price: 17.00, desc: "Pacote de tabaco", image: "", available: true },
@@ -1052,7 +1061,12 @@
     let pdvPaymentMethod = 'Pix';
     let activeCategory = 'Todos';
     let currentImageBase64 = '';
-    let currentPin = '1234';
+    
+    // SISTEMA DE DUPOR PERFIL / PIN
+    let ownerPin = '1234';       // PIN do Dono (Acesso total)
+    let employeePin = '5555';    // PIN do Funcionário (Acesso operacional)
+    let currentUserRole = null;  // 'owner' ou 'employee'
+
     let selectedPeriod = 'today';
     let isStoreOpenCurrently = false;
     let filteredSalesForExport = [];
@@ -1134,18 +1148,47 @@
     }
 
     function authenticateAdmin() {
-      const pinInput = document.getElementById('admin-pin-input').value;
-      if(pinInput === currentPin) {
-        isAdminAuthenticated = true;
-        document.getElementById('admin-auth-modal').classList.add('hidden');
-        document.getElementById('admin-content').classList.remove('hidden');
-
-        initAudioContext();
-        const hasPending = orders.some(o => (o.status || 'Pendente') === 'Pendente');
-        updatePendingOrdersAlarm(hasPending);
+      const pinInput = document.getElementById('admin-pin-input').value.trim();
+      
+      if (pinInput === ownerPin) {
+        currentUserRole = 'owner';
+      } else if (pinInput === employeePin) {
+        currentUserRole = 'employee';
       } else {
-        alert('PIN Incorreto');
+        alert('PIN Incorreto!');
+        return;
       }
+
+      isAdminAuthenticated = true;
+      document.getElementById('admin-auth-modal').classList.add('hidden');
+      document.getElementById('admin-content').classList.remove('hidden');
+
+      applyRolePermissions();
+
+      initAudioContext();
+      const hasPending = orders.some(o => (o.status || 'Pendente') === 'Pendente');
+      updatePendingOrdersAlarm(hasPending);
+    }
+
+    function applyRolePermissions() {
+      const isOwner = currentUserRole === 'owner';
+      const roleBadge = document.getElementById('role-badge');
+      if (roleBadge) {
+        roleBadge.innerText = isOwner ? 'Gestor / Dono' : 'Funcionário';
+        roleBadge.className = isOwner 
+          ? "text-xs px-2.5 py-0.5 rounded-full font-bold bg-amber-500/20 text-amber-400 border border-amber-500/30"
+          : "text-xs px-2.5 py-0.5 rounded-full font-bold bg-blue-500/20 text-blue-400 border border-blue-500/30";
+      }
+
+      // Oculta APENAS Produtos e Configurações para o Funcionário
+      document.getElementById('tab-produtos-btn')?.classList.toggle('hidden', !isOwner);
+      document.getElementById('tab-config-btn')?.classList.toggle('hidden', !isOwner);
+
+      // Oculta botões de adicionar e resetar estoque no topo
+      document.getElementById('btn-owner-add-product')?.classList.toggle('hidden', !isOwner);
+      document.getElementById('btn-owner-reset-products')?.classList.toggle('hidden', !isOwner);
+
+      setAdminTab('pedidos');
     }
 
     let storeSettings = {
@@ -1203,7 +1246,8 @@
         const data = snapshot.val();
         if (data) {
           storeSettings = { ...storeSettings, ...data };
-          if(data.pin) currentPin = data.pin;
+          if(data.ownerPin) ownerPin = data.ownerPin;
+          if(data.employeePin) employeePin = data.employeePin;
           
           document.getElementById('config-pix-key').value = storeSettings.pixKey || '';
           document.getElementById('config-delivery-fee').value = storeSettings.deliveryFee || 5.00;
@@ -1211,6 +1255,8 @@
           document.getElementById('config-store-mode').value = storeSettings.mode || 'auto';
           document.getElementById('config-open-time').value = storeSettings.openTime || '12:00';
           document.getElementById('config-close-time').value = storeSettings.closeTime || '00:00';
+          document.getElementById('config-owner-pin').value = ownerPin;
+          document.getElementById('config-employee-pin').value = employeePin;
 
           updateStoreStatusUI();
           toggleHoursInputs();
@@ -1293,8 +1339,9 @@
     }
 
     function resetDefaultProducts() {
+      if(currentUserRole !== 'owner') return alert("Apenas o gestor pode recarregar os produtos.");
       db.ref('products').set(DEFAULT_PRODUCTS).then(() => {
-        alert("Todos os 115 produtos foram recarregados com sucesso!");
+        alert("Todos os produtos foram recarregados com sucesso!");
       });
     }
 
@@ -1373,6 +1420,10 @@
     }
 
     function saveStoreSettings() {
+      if (currentUserRole !== 'owner') {
+        return alert('Apenas o Dono pode alterar as configurações do sistema.');
+      }
+
       const deliveryFee = parseFloat(document.getElementById('config-delivery-fee').value) || 5.00;
       const pricePerKm = parseFloat(document.getElementById('config-price-per-km').value) || 3.00;
       const pixKey = document.getElementById('config-pix-key').value.trim();
@@ -1380,23 +1431,20 @@
       const openTime = document.getElementById('config-open-time').value;
       const closeTime = document.getElementById('config-close-time').value;
       
-      const newPin = document.getElementById('config-new-pin').value.trim();
-      const confirmPin = document.getElementById('config-confirm-pin').value.trim();
+      const newOwnerPin = document.getElementById('config-owner-pin').value.trim() || ownerPin;
+      const newEmployeePin = document.getElementById('config-employee-pin').value.trim() || employeePin;
 
-      let pinToSave = currentPin;
-
-      if(newPin || confirmPin) {
-        if(newPin.length !== 4 || isNaN(newPin)) return alert('O novo PIN deve ter exatamente 4 dígitos numéricos.');
-        if(newPin !== confirmPin) return alert('A confirmação do novo PIN não confere.');
-        pinToSave = newPin;
+      if (newOwnerPin.length !== 4 || isNaN(newOwnerPin) || newEmployeePin.length !== 4 || isNaN(newEmployeePin)) {
+        return alert('Os PINs devem conter exatamente 4 dígitos numéricos.');
       }
 
-      const settingsData = { deliveryFee, pricePerKm, pixKey, mode, openTime, closeTime, pin: pinToSave };
+      const settingsData = { 
+        deliveryFee, pricePerKm, pixKey, mode, openTime, closeTime, 
+        ownerPin: newOwnerPin, employeePin: newEmployeePin 
+      };
 
       db.ref('settings').set(settingsData).then(() => {
-        alert('Todas as configurações foram salvas com sucesso!');
-        document.getElementById('config-new-pin').value = '';
-        document.getElementById('config-confirm-pin').value = '';
+        alert('Todas as configurações e PINs foram salvos com sucesso!');
       });
     }
 
@@ -1416,6 +1464,26 @@
       renderProducts();
     }
 
+    function parseOptions(optionsStr) {
+      if(!optionsStr) return [];
+      return optionsStr.split(',').map(item => {
+        const parts = item.split(':');
+        if(parts.length === 2) {
+          return { label: parts[0].trim(), price: parseFloat(parts[1].trim()) };
+        }
+        return null;
+      }).filter(Boolean);
+    }
+
+    function handleOptionChange(productId) {
+      const select = document.getElementById(`option-select-${productId}`);
+      const displayPrice = document.getElementById(`price-display-${productId}`);
+      if(select && displayPrice) {
+        const selectedPrice = parseFloat(select.value);
+        displayPrice.innerText = `R$ ${selectedPrice.toFixed(2)}`;
+      }
+    }
+
     function renderProducts() {
       const grid = document.getElementById('products-grid');
       const search = (document.getElementById('search-input')?.value || '').toLowerCase();
@@ -1433,6 +1501,8 @@
 
       grid.innerHTML = filtered.map(p => {
         const flavorList = p.flavors ? p.flavors.split(',').map(f => f.trim()).filter(Boolean) : [];
+        const optionsList = parseOptions(p.options);
+
         return `
         <div class="bg-neutral-900 border border-neutral-800 rounded-2xl overflow-hidden flex flex-col justify-between hover:border-neutral-700 transition group p-3 sm:p-4">
           <div class="flex flex-row sm:flex-col items-center sm:items-stretch flex-1 gap-3 sm:gap-0 min-w-0">
@@ -1452,6 +1522,15 @@
               <h3 class="font-bold text-white text-sm sm:text-base leading-snug mt-0.5 truncate sm:whitespace-normal">${p.name}</h3>
               <p class="text-neutral-400 text-xs mt-0.5 sm:mt-1 line-clamp-1 sm:line-clamp-2">${p.desc || ''}</p>
               
+              ${optionsList.length > 0 ? `
+                <div class="mt-2">
+                  <label class="block text-[10px] font-bold text-emerald-400 uppercase tracking-wider mb-1">Escolha o Tamanho/Dose:</label>
+                  <select id="option-select-${p.id}" onchange="handleOptionChange(${p.id})" class="w-full bg-neutral-950 border border-emerald-500/30 rounded-lg px-2 py-1 text-xs text-white focus:outline-none focus:border-emerald-500">
+                    ${optionsList.map(opt => `<option value="${opt.price}">${opt.label} - R$ ${opt.price.toFixed(2)}</option>`).join('')}
+                  </select>
+                </div>
+              ` : ''}
+
               ${flavorList.length > 0 ? `
                 <div class="mt-2">
                   <label class="block text-[10px] font-bold text-amber-400 uppercase tracking-wider mb-1">Escolha o Sabor:</label>
@@ -1461,12 +1540,16 @@
                 </div>
               ` : ''}
 
-              <div class="sm:hidden font-black text-emerald-400 text-base mt-1">R$ ${parseFloat(p.price).toFixed(2)}</div>
+              <div class="sm:hidden font-black text-emerald-400 text-base mt-1" id="price-display-mobile-${p.id}">
+                R$ ${optionsList.length > 0 ? optionsList[0].price.toFixed(2) : parseFloat(p.price).toFixed(2)}
+              </div>
             </div>
           </div>
 
           <div class="flex items-center justify-between pt-3 mt-2 border-t border-neutral-800/80">
-            <span class="hidden sm:inline text-lg font-black text-white">R$ ${parseFloat(p.price).toFixed(2)}</span>
+            <span class="hidden sm:inline text-lg font-black text-white" id="price-display-${p.id}">
+              R$ ${optionsList.length > 0 ? optionsList[0].price.toFixed(2) : parseFloat(p.price).toFixed(2)}
+            </span>
             ${isStoreOpenCurrently ? `
               <button onclick="addToCart(${p.id})" class="w-full sm:w-auto px-4 py-2 rounded-xl bg-brand-600 hover:bg-brand-500 text-white font-semibold text-xs transition flex items-center justify-center gap-1.5 shadow">
                 <i class="fa-solid fa-plus"></i> <span>Adicionar</span>
@@ -1495,13 +1578,26 @@
         selectedFlavor = flavorSelect.value;
       }
 
-      const cartItemId = selectedFlavor ? `${id}-${selectedFlavor}` : `${id}`;
+      let selectedOptionLabel = "";
+      let itemPrice = parseFloat(product.price);
+
+      const optionSelect = document.getElementById(`option-select-${id}`);
+      if(optionSelect) {
+        const selectedIndex = optionSelect.selectedIndex;
+        const optionsList = parseOptions(product.options);
+        if(optionsList[selectedIndex]) {
+          selectedOptionLabel = optionsList[selectedIndex].label;
+          itemPrice = optionsList[selectedIndex].price;
+        }
+      }
+
+      const cartItemId = `${id}-${selectedOptionLabel}-${selectedFlavor}`;
       const existing = cart.find(item => item.cartItemId === cartItemId);
 
       if(existing) {
         existing.qty++;
       } else {
-        cart.push({ ...product, cartItemId, selectedFlavor, qty: 1 });
+        cart.push({ ...product, price: itemPrice, cartItemId, selectedOptionLabel, selectedFlavor, qty: 1 });
       }
       renderCart();
     }
@@ -1533,6 +1629,7 @@
         <div class="flex items-center justify-between bg-neutral-950 p-3 rounded-xl border border-neutral-800">
           <div class="flex-1 pr-2">
             <h4 class="text-xs font-bold text-white">${item.name}</h4>
+            ${item.selectedOptionLabel ? `<span class="text-[10px] font-bold text-emerald-400 block"><i class="fa-solid fa-wine-glass"></i> Opção: ${item.selectedOptionLabel}</span>` : ''}
             ${item.selectedFlavor ? `<span class="text-[10px] font-bold text-amber-400 block"><i class="fa-solid fa-tag"></i> Sabor: ${item.selectedFlavor}</span>` : ''}
             <span class="text-xs text-brand-500 font-semibold">R$ ${(item.price * item.qty).toFixed(2)}</span>
           </div>
@@ -1741,7 +1838,7 @@
           <div class="space-y-1 bg-neutral-900/50 p-2.5 rounded-lg border border-neutral-800/80">
             ${(order.items || []).map(i => `
               <div class="flex justify-between text-neutral-300">
-                <span>${i.qty}x ${i.name} ${i.selectedFlavor ? `<strong class="text-amber-400">(${i.selectedFlavor})</strong>` : ''}</span>
+                <span>${i.qty}x ${i.name} ${i.selectedOptionLabel ? `<strong class="text-emerald-400">(${i.selectedOptionLabel})</strong>` : ''} ${i.selectedFlavor ? `<strong class="text-amber-400">(${i.selectedFlavor})</strong>` : ''}</span>
                 <span>R$ ${(i.price * i.qty).toFixed(2)}</span>
               </div>
             `).join('')}
@@ -1765,6 +1862,11 @@
     }
 
     function setAdminTab(tab) {
+      if(currentUserRole === 'employee' && (tab === 'produtos' || tab === 'config')) {
+        alert('Acesso restrito ao Dono da Adega.');
+        return;
+      }
+
       document.getElementById('admin-tab-pedidos').classList.toggle('hidden', tab !== 'pedidos');
       document.getElementById('admin-tab-motoboy').classList.toggle('hidden', tab !== 'motoboy');
       document.getElementById('admin-tab-buscar').classList.toggle('hidden', tab !== 'buscar');
@@ -1802,7 +1904,7 @@
 
       let itemsHtml = (order.items || []).map(i => `
         <div style="display: flex; justify-content: space-between; margin-bottom: 3px;">
-          <span>${i.qty}x ${i.name} ${i.selectedFlavor ? `(${i.selectedFlavor})` : ''}</span>
+          <span>${i.qty}x ${i.name} ${i.selectedOptionLabel ? `[${i.selectedOptionLabel}]` : ''} ${i.selectedFlavor ? `(${i.selectedFlavor})` : ''}</span>
           <span>R$ ${(i.price * i.qty).toFixed(2)}</span>
         </div>
       `).join('');
@@ -1872,7 +1974,7 @@
           <div class="space-y-1 text-[11px]">
             ${(order.items || []).map(i => `
               <div class="flex justify-between text-neutral-300">
-                <span>${i.qty}x ${i.name} ${i.selectedFlavor ? `<strong class="text-amber-400">(${i.selectedFlavor})</strong>` : ''}</span>
+                <span>${i.qty}x ${i.name} ${i.selectedOptionLabel ? `<strong class="text-emerald-400">(${i.selectedOptionLabel})</strong>` : ''} ${i.selectedFlavor ? `<strong class="text-amber-400">(${i.selectedFlavor})</strong>` : ''}</span>
                 <span>R$ ${(i.price * i.qty).toFixed(2)}</span>
               </div>
             `).join('')}
@@ -2088,7 +2190,7 @@
         <tr>
           <td class="p-4 font-semibold text-white flex items-center gap-3">${p.name}</td>
           <td class="p-4">${p.category}</td>
-          <td class="p-4 text-xs text-amber-400 font-semibold max-w-xs truncate">${p.flavors || '-'}</td>
+          <td class="p-4 text-xs text-amber-400 font-semibold max-w-xs truncate">${p.options || p.flavors || '-'}</td>
           <td class="p-4">R$ ${parseFloat(p.price).toFixed(2)}</td>
           <td class="p-4 text-right">
             <button onclick="openProductModal('${p.firebaseKey}')" class="px-2.5 py-1.5 bg-neutral-800 text-amber-400 rounded-lg text-xs font-semibold">Editar</button>
@@ -2099,6 +2201,8 @@
     }
 
     function openProductModal(key = null) {
+      if(currentUserRole !== 'owner') return alert("Apenas o Dono pode editar ou adicionar produtos.");
+
       const modal = document.getElementById('product-modal');
       const form = document.getElementById('product-form');
       form.reset();
@@ -2113,6 +2217,7 @@
           document.getElementById('edit-name').value = p.name;
           document.getElementById('edit-category').value = p.category;
           document.getElementById('edit-price').value = p.price;
+          document.getElementById('edit-options').value = p.options || '';
           document.getElementById('edit-flavors').value = p.flavors || '';
           document.getElementById('edit-desc').value = p.desc || '';
           document.getElementById('edit-image-url').value = p.image || '';
@@ -2154,21 +2259,25 @@
 
     function saveProduct(event) {
       event.preventDefault();
+      if(currentUserRole !== 'owner') return alert("Apenas o Dono pode alterar o estoque.");
+
       const key = document.getElementById('edit-firebase-key').value;
       const id = parseInt(document.getElementById('edit-id').value) || Date.now();
       const name = document.getElementById('edit-name').value;
       const category = document.getElementById('edit-category').value;
       const price = parseFloat(document.getElementById('edit-price').value);
+      const options = document.getElementById('edit-options').value.trim();
       const flavors = document.getElementById('edit-flavors').value.trim();
       const desc = document.getElementById('edit-desc').value;
       const image = currentImageBase64 || document.getElementById('edit-image-url').value;
 
-      const productData = { id, name, category, price, flavors, desc, image, available: true };
+      const productData = { id, name, category, price, options, flavors, desc, image, available: true };
       if(key) db.ref(`products/${key}`).update(productData).then(closeProductModal);
       else db.ref('products').push(productData).then(closeProductModal);
     }
 
     function deleteProduct(key) {
+      if(currentUserRole !== 'owner') return alert("Apenas o Dono pode excluir produtos.");
       if(confirm('Excluir este produto?')) db.ref(`products/${key}`).remove();
     }
 
@@ -2190,19 +2299,32 @@
       const product = products.find(p => p.id === id);
       if(!product) return;
 
+      let optionLabel = "";
+      let price = parseFloat(product.price);
+      const optionsList = parseOptions(product.options);
+
+      if (optionsList.length > 0) {
+        const optionChoice = prompt(`Escolha a opção de ${product.name}:\n` + optionsList.map((o, idx) => `${idx + 1}. ${o.label} (R$ ${o.price.toFixed(2)})`).join('\n'), "1");
+        const idx = parseInt(optionChoice) - 1;
+        if (optionsList[idx]) {
+          optionLabel = optionsList[idx].label;
+          price = optionsList[idx].price;
+        }
+      }
+
       let flavor = "";
       if (product.flavors) {
         const firstFlavor = product.flavors.split(',')[0].trim();
         flavor = prompt(`Digite ou confirme o sabor de ${product.name}:`, firstFlavor) || firstFlavor;
       }
 
-      const cartItemId = flavor ? `${id}-${flavor}` : `${id}`;
+      const cartItemId = `${id}-${optionLabel}-${flavor}`;
       const existing = pdvCart.find(item => item.cartItemId === cartItemId);
 
       if(existing) {
         existing.qty++;
       } else {
-        pdvCart.push({ ...product, cartItemId, selectedFlavor: flavor, qty: 1 });
+        pdvCart.push({ ...product, price, cartItemId, selectedOptionLabel: optionLabel, selectedFlavor: flavor, qty: 1 });
       }
       renderPdvCart();
     }
@@ -2218,6 +2340,7 @@
         <div class="flex items-center justify-between bg-neutral-950 p-2.5 rounded-xl border border-neutral-800">
           <div>
             <h5 class="text-xs font-bold text-white">${item.name}</h5>
+            ${item.selectedOptionLabel ? `<span class="text-[10px] text-emerald-400 font-bold block">Opção: ${item.selectedOptionLabel}</span>` : ''}
             ${item.selectedFlavor ? `<span class="text-[10px] text-amber-400 font-bold block">Sabor: ${item.selectedFlavor}</span>` : ''}
             <span class="text-[10px] text-emerald-400 font-bold">R$ ${(item.price * item.qty).toFixed(2)}</span>
           </div>
