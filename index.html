@@ -1,0 +1,2211 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="h-full bg-neutral-950 text-neutral-100 dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Alves Adega - Delivery & PDV</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
+  <!-- Bibliotecas para Gerar PDF (jsPDF + autoTable) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#fff1f2',
+              100: '#ffe4e6',
+              500: '#e50914',
+              600: '#dc2626',
+              700: '#b91c1c',
+              900: '#450a0a',
+              950: '#1a0303'
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    @media print {
+      body * { visibility: hidden; }
+      #printable-receipt, #printable-receipt * { visibility: visible; }
+      #printable-receipt {
+        position: absolute; left: 0; top: 0; width: 80mm; padding: 5mm;
+        font-family: monospace; color: #000 !important; background: #fff !important;
+      }
+    }
+  </style>
+</head>
+<body class="h-full flex flex-col font-sans antialiased selection:bg-brand-600 selection:text-white" onclick="initAudioContext()">
+
+  <div id="printable-receipt" class="hidden"></div>
+
+  <!-- Modal Idade +18 -->
+  <div id="age-modal" class="fixed inset-0 z-50 bg-black/90 backdrop-blur-md flex items-center justify-center p-4">
+    <div class="bg-neutral-900 border border-neutral-800 p-6 md:p-8 rounded-2xl max-w-md w-full text-center shadow-2xl space-y-4">
+      <div class="w-24 h-24 rounded-2xl overflow-hidden mx-auto shadow-lg border border-brand-500/30">
+        <img id="logo-modal" src="./ALVES_ADEGA_LOGO.jpeg" alt="Alves Adega" class="w-full h-full object-cover">
+      </div>
+      <div>
+        <h2 class="text-2xl font-bold text-white mb-1">Verificação de Idade</h2>
+        <p class="text-neutral-400 text-sm">Você precisa ter 18 anos ou mais para acessar o cardápio e realizar pedidos na Alves Adega.</p>
+      </div>
+      <div class="flex gap-3 pt-2">
+        <button onclick="window.location.href='https://www.google.com'" class="flex-1 py-3 bg-neutral-800 hover:bg-neutral-700 text-neutral-300 font-semibold rounded-xl transition">Sair</button>
+        <button onclick="confirmAge()" class="flex-1 py-3 bg-brand-600 hover:bg-brand-500 text-white font-semibold rounded-xl shadow-lg shadow-brand-600/30 transition">Tenho +18 anos</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Header Principal -->
+  <header class="sticky top-0 z-40 bg-neutral-900/90 backdrop-blur-md border-b border-neutral-800">
+    <div class="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl overflow-hidden shadow-lg border border-neutral-800">
+          <img id="logo-header" src="./ALVES_ADEGA_LOGO.jpeg" alt="Alves Adega" class="w-full h-full object-cover">
+        </div>
+        <div>
+          <h1 class="font-bold text-white leading-none">Alves Adega</h1>
+          <p class="text-xs text-neutral-400 mt-0.5">Unidade Jandira • Delivery</p>
+        </div>
+      </div>
+      <div class="flex items-center gap-2">
+        <button onclick="openTrackingModal()" class="px-3 py-1.5 bg-neutral-800 hover:bg-neutral-700 text-amber-400 border border-amber-500/30 rounded-xl text-xs font-bold flex items-center gap-1.5 transition">
+          <i class="fa-solid fa-location-dot"></i> Acompanhar Pedido
+        </button>
+        <div id="connection-status" class="hidden sm:flex text-xs font-semibold px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 items-center gap-1.5">
+          <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> Nuvem Conectada
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="flex-1 max-w-7xl w-full mx-auto px-4 py-6">
+    
+    <!-- CARDÁPIO ONLINE -->
+    <section id="view-cardapio" class="space-y-6">
+      <div class="relative overflow-hidden rounded-2xl bg-gradient-to-r from-brand-950 via-neutral-900 to-neutral-900 border border-neutral-800 p-6 md:p-8 flex flex-col md:flex-row items-center justify-between gap-6">
+        <div class="relative z-10 max-w-2xl">
+          <span id="store-status-badge" class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 mb-3">
+            <span id="store-status-dot" class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+            <span id="store-status-text">Aberto Agora</span>
+          </span>
+          <h2 class="text-2xl md:text-3xl font-extrabold text-white">Sua bebida gelada entregue na sua porta em Jandira</h2>
+          <p class="text-neutral-400 text-sm mt-2"><i class="fa-solid fa-location-dot text-brand-500 mr-1"></i> Rua São Bernardo do Campo, 210 - Tereza, Jandira</p>
+        </div>
+        <div class="w-28 h-28 md:w-32 md:h-32 rounded-2xl overflow-hidden border-2 border-brand-500/30 shadow-2xl flex-shrink-0">
+          <img id="logo-banner" src="./ALVES_ADEGA_LOGO.jpeg" alt="Alves Adega" class="w-full h-full object-cover">
+        </div>
+      </div>
+
+      <div class="space-y-4">
+        <div class="relative">
+          <i class="fa-solid fa-search absolute left-4 top-1/2 -translate-y-1/2 text-neutral-500"></i>
+          <input type="text" id="search-input" oninput="filterProducts()" placeholder="Buscar vinhos, cervejas, combos, essências..." class="w-full bg-neutral-900 border border-neutral-800 rounded-xl pl-11 pr-4 py-3 text-sm text-white placeholder-neutral-500 focus:outline-none focus:border-brand-500 transition">
+        </div>
+
+        <div class="flex gap-2 overflow-x-auto pb-2 scrollbar-none" id="category-filters"></div>
+      </div>
+
+      <div id="products-grid" class="flex flex-col sm:grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4"></div>
+    </section>
+
+    <!-- VISÃO DO ADMIN (#admin) -->
+    <section id="view-admin" class="hidden space-y-6">
+      <div id="admin-auth-modal" class="fixed inset-0 z-50 bg-black/90 backdrop-blur-md flex items-center justify-center p-4">
+        <div class="bg-neutral-900 border border-neutral-800 p-6 rounded-2xl max-w-xs w-full text-center shadow-2xl">
+          <div class="w-16 h-16 rounded-xl overflow-hidden mx-auto mb-3 border border-neutral-800">
+            <img id="logo-admin-auth" src="./ALVES_ADEGA_LOGO.jpeg" alt="Alves Adega" class="w-full h-full object-cover">
+          </div>
+          <h3 class="text-lg font-bold text-white mb-1">Painel do Gestor</h3>
+          <p class="text-neutral-400 text-xs mb-4">Insira o PIN de 4 dígitos</p>
+          <input type="password" id="admin-pin-input" maxlength="4" placeholder="••••" class="w-full text-center text-2xl tracking-widest bg-neutral-950 border border-neutral-800 rounded-xl py-2 text-white mb-4 focus:outline-none focus:border-brand-500">
+          <button onclick="authenticateAdmin()" class="w-full py-2.5 bg-brand-600 hover:bg-brand-500 text-white font-semibold rounded-xl shadow-lg transition">Acessar Painel</button>
+        </div>
+      </div>
+
+      <div id="admin-content" class="hidden space-y-6">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-neutral-900 border border-neutral-800 p-4 rounded-2xl">
+          <div class="flex items-center gap-3">
+            <div class="w-12 h-12 rounded-xl overflow-hidden border border-neutral-800 flex-shrink-0">
+              <img id="logo-admin-header" src="./ALVES_ADEGA_LOGO.jpeg" alt="Alves Adega" class="w-full h-full object-cover">
+            </div>
+            <div>
+              <h2 class="text-xl font-bold text-white">Painel de Controle - Alves Adega</h2>
+              <p class="text-xs text-neutral-400">Pedidos, PDV Balcão, Busca por ID, Estoque, Relatórios e Fechamento do Motoboy.</p>
+            </div>
+          </div>
+          <div class="flex flex-wrap items-center gap-2">
+            <button onclick="playNotificationSound()" class="px-3 py-2 bg-neutral-800 hover:bg-neutral-700 text-amber-400 border border-amber-500/30 rounded-xl text-xs font-semibold flex items-center gap-1.5 shadow transition">
+              <i class="fa-solid fa-bell"></i> Testar Sino
+            </button>
+            <button onclick="openProductModal()" class="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 shadow transition">
+              <i class="fa-solid fa-plus"></i> Novo Produto
+            </button>
+            <button onclick="resetDefaultProducts()" class="px-3 py-2 bg-neutral-800 hover:bg-neutral-700 text-amber-400 border border-amber-500/30 rounded-xl text-xs font-semibold flex items-center gap-1.5 shadow transition">
+              <i class="fa-solid fa-rotate-left"></i> Carregar Todos os 115 Produtos
+            </button>
+          </div>
+        </div>
+
+        <div class="flex border-b border-neutral-800 gap-4 overflow-x-auto scrollbar-none">
+          <button onclick="setAdminTab('pedidos')" id="tab-pedidos-btn" class="pb-3 border-b-2 border-brand-500 font-semibold text-white text-sm flex items-center gap-2 whitespace-nowrap">
+            <i class="fa-solid fa-receipt"></i> Pedidos Delivery <span id="orders-badge" class="bg-brand-600 text-white text-[10px] px-1.5 py-0.5 rounded-full">0</span>
+          </button>
+          <button onclick="setAdminTab('motoboy')" id="tab-motoboy-btn" class="pb-3 border-b-2 border-transparent font-semibold text-neutral-400 hover:text-white text-sm flex items-center gap-2 whitespace-nowrap">
+            <i class="fa-solid fa-motorcycle text-brand-500"></i> Taxas Motoboy
+          </button>
+          <button onclick="setAdminTab('buscar')" id="tab-buscar-btn" class="pb-3 border-b-2 border-transparent font-semibold text-neutral-400 hover:text-white text-sm flex items-center gap-2 whitespace-nowrap">
+            <i class="fa-solid fa-magnifying-glass text-amber-400"></i> Buscar Pedido (Zap)
+          </button>
+          <button onclick="setAdminTab('pdv')" id="tab-pdv-btn" class="pb-3 border-b-2 border-transparent font-semibold text-neutral-400 hover:text-white text-sm flex items-center gap-2 whitespace-nowrap">
+            <i class="fa-solid fa-cash-register text-brand-500"></i> PDV / Balcão
+          </button>
+          <button onclick="setAdminTab('vendas')" id="tab-vendas-btn" class="pb-3 border-b-2 border-transparent font-semibold text-neutral-400 hover:text-white text-sm flex items-center gap-2 whitespace-nowrap">
+            <i class="fa-solid fa-chart-line"></i> Vendas / Relatórios
+          </button>
+          <button onclick="setAdminTab('produtos')" id="tab-produtos-btn" class="pb-3 border-b-2 border-transparent font-semibold text-neutral-400 hover:text-white text-sm flex items-center gap-2 whitespace-nowrap">
+            <i class="fa-solid fa-boxes-stacked"></i> Produtos / Estoque
+          </button>
+          <button onclick="setAdminTab('config')" id="tab-config-btn" class="pb-3 border-b-2 border-transparent font-semibold text-neutral-400 hover:text-white text-sm flex items-center gap-2 whitespace-nowrap">
+            <i class="fa-solid fa-gear"></i> Configurações
+          </button>
+        </div>
+
+        <!-- PEDIDOS SEPARADOS POR COLUNAS -->
+        <div id="admin-tab-pedidos" class="space-y-4">
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div class="bg-neutral-900 border border-neutral-800 rounded-2xl p-4 space-y-3">
+              <div class="flex items-center justify-between border-b border-neutral-800 pb-2">
+                <h3 class="text-xs font-bold text-rose-500 flex items-center gap-1.5 uppercase tracking-wider animate-pulse">
+                  <span>🚨</span> Pendentes / Novos
+                </h3>
+                <span id="badge-count-pendente" class="bg-rose-950 border border-rose-500/40 text-rose-400 text-[10px] font-bold px-2 py-0.5 rounded-full animate-pulse">0</span>
+              </div>
+              <div id="orders-column-pendente" class="space-y-3 max-h-[650px] overflow-y-auto pr-1"></div>
+            </div>
+
+            <div class="bg-neutral-900 border border-neutral-800 rounded-2xl p-4 space-y-3">
+              <div class="flex items-center justify-between border-b border-neutral-800 pb-2">
+                <h3 class="text-xs font-bold text-blue-400 flex items-center gap-1.5 uppercase tracking-wider">
+                  <span>🔵</span> Em Preparo
+                </h3>
+                <span id="badge-count-preparo" class="bg-neutral-950 border border-neutral-800 text-blue-400 text-[10px] font-bold px-2 py-0.5 rounded-full">0</span>
+              </div>
+              <div id="orders-column-preparo" class="space-y-3 max-h-[650px] overflow-y-auto pr-1"></div>
+            </div>
+
+            <div class="bg-neutral-900 border border-neutral-800 rounded-2xl p-4 space-y-3">
+              <div class="flex items-center justify-between border-b border-neutral-800 pb-2">
+                <h3 class="text-xs font-bold text-purple-400 flex items-center gap-1.5 uppercase tracking-wider">
+                  <span>🟣</span> Em Rota
+                </h3>
+                <span id="badge-count-rota" class="bg-neutral-950 border border-neutral-800 text-purple-400 text-[10px] font-bold px-2 py-0.5 rounded-full">0</span>
+              </div>
+              <div id="orders-column-rota" class="space-y-3 max-h-[650px] overflow-y-auto pr-1"></div>
+            </div>
+
+            <div class="bg-neutral-900 border border-neutral-800 rounded-2xl p-4 space-y-3">
+              <div class="flex items-center justify-between border-b border-neutral-800 pb-2">
+                <h3 class="text-xs font-bold text-emerald-400 flex items-center gap-1.5 uppercase tracking-wider">
+                  <span>🟢</span> Concluídos
+                </h3>
+                <span id="badge-count-concluido" class="bg-neutral-950 border border-neutral-800 text-emerald-400 text-[10px] font-bold px-2 py-0.5 rounded-full">0</span>
+              </div>
+              <div id="orders-column-concluido" class="space-y-3 max-h-[650px] overflow-y-auto pr-1"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ABA MOTOBOY / TAXAS DE ENTREGA -->
+        <div id="admin-tab-motoboy" class="hidden space-y-6">
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div class="bg-neutral-900 border border-neutral-800 p-5 rounded-2xl flex items-center justify-between">
+              <div>
+                <span class="text-xs font-semibold text-neutral-400 uppercase">Total Taxa a Pagar</span>
+                <div id="metric-motoboy-total" class="text-2xl font-black text-amber-400 mt-1">R$ 0,00</div>
+              </div>
+              <div class="w-12 h-12 bg-amber-500/10 text-amber-400 rounded-2xl flex items-center justify-center text-xl border border-amber-500/20">
+                <i class="fa-solid fa-motorcycle"></i>
+              </div>
+            </div>
+            <div class="bg-neutral-900 border border-neutral-800 p-5 rounded-2xl flex items-center justify-between">
+              <div>
+                <span class="text-xs font-semibold text-neutral-400 uppercase">Entregas Realizadas</span>
+                <div id="metric-motoboy-count" class="text-2xl font-black text-white mt-1">0</div>
+              </div>
+              <div class="w-12 h-12 bg-blue-500/10 text-blue-400 rounded-2xl flex items-center justify-center text-xl border border-blue-500/20">
+                <i class="fa-solid fa-route"></i>
+              </div>
+            </div>
+            <div class="bg-neutral-900 border border-neutral-800 p-5 rounded-2xl flex items-center justify-between">
+              <div>
+                <span class="text-xs font-semibold text-neutral-400 uppercase">Média por Entrega</span>
+                <div id="metric-motoboy-avg" class="text-2xl font-black text-brand-500 mt-1">R$ 0,00</div>
+              </div>
+              <div class="w-12 h-12 bg-brand-500/10 text-brand-500 rounded-2xl flex items-center justify-center text-xl border border-brand-500/20">
+                <i class="fa-solid fa-calculator"></i>
+              </div>
+            </div>
+          </div>
+
+          <div class="bg-neutral-900 border border-neutral-800 rounded-2xl p-5 space-y-4">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-neutral-800 pb-3">
+              <div>
+                <h3 class="font-bold text-white text-base flex items-center gap-2">
+                  <i class="fa-solid fa-list-check text-amber-400"></i> Relatório de Entregas & Taxas do Motoboy
+                </h3>
+                <span class="text-xs text-neutral-400">Calculado a partir das entregas de delivery registradas.</span>
+              </div>
+              
+              <button onclick="closeMotoboyCashAndReset()" class="px-4 py-2.5 bg-rose-600 hover:bg-rose-500 text-white font-bold rounded-xl text-xs flex items-center gap-2 shadow-lg shadow-rose-600/30 transition">
+                <i class="fa-solid fa-file-pdf"></i> Zerar / Fechar Caixa do Motoboy
+              </button>
+            </div>
+
+            <div class="overflow-x-auto">
+              <table class="w-full text-left text-xs text-neutral-300">
+                <thead class="bg-neutral-950 uppercase text-neutral-400 border-b border-neutral-800">
+                  <tr>
+                    <th class="p-3">ID Pedido</th>
+                    <th class="p-3">Cliente / Endereço</th>
+                    <th class="p-3">Distância (KM)</th>
+                    <th class="p-3">Status</th>
+                    <th class="p-3 font-bold text-amber-400">Taxa Motoboy (R$)</th>
+                    <th class="p-3 text-right">Data/Hora</th>
+                  </tr>
+                </thead>
+                <tbody id="motoboy-report-table" class="divide-y divide-neutral-800"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- ABA BUSCAR PEDIDO -->
+        <div id="admin-tab-buscar" class="hidden space-y-6">
+          <div class="bg-neutral-900 border border-neutral-800 p-6 rounded-2xl space-y-4 max-w-2xl mx-auto">
+            <div class="flex items-center gap-3 border-b border-neutral-800 pb-4">
+              <div class="w-10 h-10 rounded-xl bg-amber-500/10 text-amber-400 border border-amber-500/20 flex items-center justify-center text-xl">
+                <i class="fa-solid fa-magnifying-glass"></i>
+              </div>
+              <div>
+                <h3 class="text-lg font-bold text-white">Localizador Rápido de Pedido (WhatsApp)</h3>
+                <p class="text-xs text-neutral-400">Digite o número/ID do pedido ou o nome do cliente para ver o status imediato.</p>
+              </div>
+            </div>
+
+            <div class="flex gap-2">
+              <input type="text" id="admin-search-order-input" onkeyup="if(event.key==='Enter') adminSearchOrder()" placeholder="Ex: 1234, João, ou número completo" class="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-brand-500">
+              <button onclick="adminSearchOrder()" class="px-6 py-3 bg-brand-600 hover:bg-brand-500 text-white font-bold rounded-xl text-sm transition flex-shrink-0">Pesquisar</button>
+            </div>
+
+            <div id="admin-search-results" class="space-y-3 pt-2">
+              <p class="text-center text-neutral-500 text-xs py-4">Digite o ID do pedido acima para visualizar os detalhes.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- ABA PDV -->
+        <div id="admin-tab-pdv" class="hidden">
+          <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            <div class="lg:col-span-7 space-y-4">
+              <div class="bg-neutral-900 border border-neutral-800 p-4 rounded-2xl flex flex-col sm:flex-row gap-3 items-center justify-between">
+                <div class="relative w-full sm:w-72">
+                  <i class="fa-solid fa-search absolute left-3 top-1/2 -translate-y-1/2 text-neutral-500 text-xs"></i>
+                  <input type="text" id="pdv-search" oninput="renderPdvProducts()" placeholder="Buscar produto..." class="w-full bg-neutral-950 border border-neutral-800 rounded-xl pl-9 pr-3 py-2 text-xs text-white focus:outline-none focus:border-brand-500">
+                </div>
+                <div class="flex gap-1.5 overflow-x-auto w-full sm:w-auto scrollbar-none" id="pdv-categories"></div>
+              </div>
+              <div id="pdv-products-grid" class="grid grid-cols-2 sm:grid-cols-3 gap-3 max-h-[600px] overflow-y-auto pr-1"></div>
+            </div>
+
+            <div class="lg:col-span-5">
+              <div class="bg-neutral-900 border border-neutral-800 rounded-2xl p-4 md:p-5 space-y-4 sticky top-20">
+                <div class="flex items-center justify-between border-b border-neutral-800 pb-3">
+                  <h3 class="font-bold text-white text-base flex items-center gap-2">
+                    <i class="fa-solid fa-cart-shopping text-brand-500"></i> Venda do Balcão
+                  </h3>
+                  <button onclick="clearPdvCart()" class="text-xs text-neutral-400 hover:text-rose-400 flex items-center gap-1 transition">
+                    <i class="fa-solid fa-trash-can"></i> Limpar
+                  </button>
+                </div>
+                <div id="pdv-cart-items" class="space-y-2 max-h-60 overflow-y-auto pr-1"></div>
+                <div class="bg-neutral-950 border border-neutral-800 p-4 rounded-xl space-y-3">
+                  <div class="flex justify-between items-center text-sm font-bold text-white">
+                    <span>Total a Pagar:</span>
+                    <span id="pdv-total-display" class="text-2xl font-black text-emerald-400">R$ 0,00</span>
+                  </div>
+
+                  <div class="space-y-2 pt-2 border-t border-neutral-800">
+                    <label class="block text-xs text-neutral-400 font-semibold">Forma de Pagamento:</label>
+                    <div class="grid grid-cols-2 gap-2 text-xs">
+                      <button onclick="setPdvPayment('Pix')" id="pdv-pay-pix" class="pdv-pay-btn py-2 px-3 rounded-xl bg-brand-600 text-white font-bold border border-brand-500 transition">Pix</button>
+                      <button onclick="setPdvPayment('Dinheiro')" id="pdv-pay-dinheiro" class="pdv-pay-btn py-2 px-3 rounded-xl bg-neutral-900 text-neutral-400 border border-neutral-800 hover:text-white transition">Dinheiro</button>
+                      <button onclick="setPdvPayment('Cartão de Débito')" id="pdv-pay-debito" class="pdv-pay-btn py-2 px-3 rounded-xl bg-neutral-900 text-neutral-400 border border-neutral-800 hover:text-white transition">Débito</button>
+                      <button onclick="setPdvPayment('Cartão de Crédito')" id="pdv-pay-credito" class="pdv-pay-btn py-2 px-3 rounded-xl bg-neutral-900 text-neutral-400 border border-neutral-800 hover:text-white transition">Crédito</button>
+                    </div>
+
+                    <div id="pdv-change-container" class="hidden space-y-2 pt-2">
+                      <div class="flex items-center gap-2">
+                        <span class="text-xs text-neutral-400">Valor Recebido:</span>
+                        <input type="number" id="pdv-cash-received" oninput="calculatePdvChange()" placeholder="R$ 0,00" class="w-full bg-neutral-900 border border-neutral-800 rounded-lg px-2.5 py-1 text-xs text-white focus:outline-none focus:border-brand-500">
+                      </div>
+                      <div class="flex justify-between items-center text-xs bg-neutral-900 p-2 rounded-lg border border-neutral-800">
+                        <span class="text-neutral-400">Troco do Cliente:</span>
+                        <strong id="pdv-change-display" class="text-amber-400 font-black text-sm">R$ 0,00</strong>
+                      </div>
+                    </div>
+
+                    <input type="text" id="pdv-client-name" placeholder="Nome do Cliente (Opcional)" class="w-full bg-neutral-900 border border-neutral-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-brand-500">
+                  </div>
+
+                  <button onclick="submitPdvOrder()" class="w-full py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl shadow-lg transition flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-check-circle"></i> Finalizar Venda Balcão
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ABA DE VENDAS -->
+        <div id="admin-tab-vendas" class="hidden space-y-6">
+          <div class="bg-neutral-900 border border-neutral-800 p-4 rounded-2xl flex flex-col md:flex-row gap-4 items-center justify-between text-xs">
+            <div class="flex flex-wrap items-center gap-2 w-full md:w-auto">
+              <span class="font-bold text-neutral-400 uppercase tracking-wider flex items-center gap-1.5">
+                <i class="fa-solid fa-calendar-days text-brand-500"></i> Período:
+              </span>
+              <button onclick="setReportPeriod('today')" id="period-btn-today" class="period-btn px-3 py-1.5 rounded-xl font-bold bg-brand-600 text-white border border-brand-500">Hoje</button>
+              <button onclick="setReportPeriod('week')" id="period-btn-week" class="period-btn px-3 py-1.5 rounded-xl font-bold bg-neutral-950 text-neutral-400 border border-neutral-800 hover:text-white">Esta Semana</button>
+              <button onclick="setReportPeriod('month')" id="period-btn-month" class="period-btn px-3 py-1.5 rounded-xl font-bold bg-neutral-950 text-neutral-400 border border-neutral-800 hover:text-white">Este Mês</button>
+              <button onclick="setReportPeriod('custom')" id="period-btn-custom" class="period-btn px-3 py-1.5 rounded-xl font-bold bg-neutral-950 text-neutral-400 border border-neutral-800 hover:text-white">Personalizado</button>
+            </div>
+
+            <div id="custom-date-container" class="hidden flex items-center gap-2">
+              <input type="date" id="filter-date-start" onchange="updateSalesMetrics()" class="bg-neutral-950 border border-neutral-800 rounded-xl px-2.5 py-1.5 text-xs text-white focus:border-brand-500">
+              <span class="text-neutral-500">até</span>
+              <input type="date" id="filter-date-end" onchange="updateSalesMetrics()" class="bg-neutral-950 border border-neutral-800 rounded-xl px-2.5 py-1.5 text-xs text-white focus:border-brand-500">
+            </div>
+
+            <div class="flex flex-wrap items-center gap-3 w-full md:w-auto justify-end">
+              <div class="flex items-center gap-1.5">
+                <span class="font-bold text-neutral-400 uppercase tracking-wider">Origem:</span>
+                <select id="filter-origin" onchange="updateSalesMetrics()" class="bg-neutral-950 border border-neutral-800 rounded-xl px-3 py-1.5 text-xs text-white focus:outline-none focus:border-brand-500 font-semibold">
+                  <option value="all">Todas</option>
+                  <option value="Delivery">Delivery</option>
+                  <option value="Balcão">Balcão</option>
+                </select>
+              </div>
+
+              <button onclick="closeCashAndResetSales()" class="px-4 py-2 bg-rose-600 hover:bg-rose-500 text-white font-bold rounded-xl text-xs flex items-center gap-2 shadow-lg shadow-rose-600/30 transition">
+                <i class="fa-solid fa-file-pdf"></i> Fechamento de Caixa / Zerar Vendas
+              </button>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div class="bg-neutral-900 border border-neutral-800 p-5 rounded-2xl flex items-center justify-between">
+              <div>
+                <span class="text-xs font-semibold text-neutral-400 uppercase">Faturamento Total</span>
+                <div id="metric-sales-total" class="text-2xl font-black text-emerald-400 mt-1">R$ 0,00</div>
+              </div>
+              <div class="w-12 h-12 bg-emerald-500/10 text-emerald-400 rounded-2xl flex items-center justify-center text-xl border border-emerald-500/20">
+                <i class="fa-solid fa-dollar-sign"></i>
+              </div>
+            </div>
+            <div class="bg-neutral-900 border border-neutral-800 p-5 rounded-2xl flex items-center justify-between">
+              <div>
+                <span class="text-xs font-semibold text-neutral-400 uppercase">Total de Vendas</span>
+                <div id="metric-sales-count" class="text-2xl font-black text-white mt-1">0</div>
+              </div>
+              <div class="w-12 h-12 bg-blue-500/10 text-blue-400 rounded-2xl flex items-center justify-center text-xl border border-blue-500/20">
+                <i class="fa-solid fa-bag-shopping"></i>
+              </div>
+            </div>
+            <div class="bg-neutral-900 border border-neutral-800 p-5 rounded-2xl flex items-center justify-between">
+              <div>
+                <span class="text-xs font-semibold text-neutral-400 uppercase">Ticket Médio</span>
+                <div id="metric-sales-avg" class="text-2xl font-black text-brand-500 mt-1">R$ 0,00</div>
+              </div>
+              <div class="w-12 h-12 bg-brand-500/10 text-brand-500 rounded-2xl flex items-center justify-center text-xl border border-brand-500/20">
+                <i class="fa-solid fa-calculator"></i>
+              </div>
+            </div>
+          </div>
+
+          <div class="bg-neutral-900 border border-neutral-800 rounded-2xl p-5 space-y-4">
+            <h3 class="font-bold text-white text-base flex items-center gap-2">
+              <i class="fa-solid fa-list-check text-brand-500"></i> Histórico de Vendas Filtrado
+            </h3>
+            <div class="overflow-x-auto">
+              <table class="w-full text-left text-xs text-neutral-300">
+                <thead class="bg-neutral-950 uppercase text-neutral-400 border-b border-neutral-800">
+                  <tr>
+                    <th class="p-3">Origem / ID</th>
+                    <th class="p-3">Cliente</th>
+                    <th class="p-3">Pagamento</th>
+                    <th class="p-3">Total (R$)</th>
+                    <th class="p-3 text-right">Data/Hora</th>
+                  </tr>
+                </thead>
+                <tbody id="sales-report-table" class="divide-y divide-neutral-800"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <div id="admin-tab-produtos" class="hidden space-y-6">
+          <div class="overflow-x-auto bg-neutral-900 border border-neutral-800 rounded-2xl">
+            <table class="w-full text-left text-sm text-neutral-300">
+              <thead class="bg-neutral-950 text-xs uppercase text-neutral-400 border-b border-neutral-800">
+                <tr>
+                  <th class="p-4">Produto</th>
+                  <th class="p-4">Categoria</th>
+                  <th class="p-4">Preço (R$)</th>
+                  <th class="p-4 text-right">Ações</th>
+                </tr>
+              </thead>
+              <tbody id="admin-products-table" class="divide-y divide-neutral-800"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- ABA CONFIGURAÇÕES -->
+        <div id="admin-tab-config" class="hidden space-y-6 max-w-2xl bg-neutral-900 border border-neutral-800 p-6 rounded-2xl">
+          <h3 class="text-lg font-bold text-white mb-2 flex items-center gap-2">
+            <i class="fa-solid fa-sliders text-brand-500"></i> Configurações Gerais
+          </h3>
+
+          <div class="space-y-5">
+            <div class="bg-neutral-950 border border-neutral-800 p-4 rounded-xl space-y-2">
+              <label class="block text-xs font-bold text-neutral-300 uppercase tracking-wider flex items-center gap-2">
+                <i class="fa-solid fa-truck text-brand-500"></i> Taxa Mínima de Entrega (R$)
+              </label>
+              <input type="number" id="config-delivery-fee" step="0.5" value="5.00" class="w-full bg-neutral-900 border border-neutral-800 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-500">
+              <p class="text-[10px] text-neutral-500">Será o valor mínimo cobrado mesmo se a distância calculada for inferior.</p>
+            </div>
+
+            <div class="bg-neutral-950 border border-neutral-800 p-4 rounded-xl space-y-2">
+              <label class="block text-xs font-bold text-neutral-300 uppercase tracking-wider flex items-center gap-2">
+                <i class="fa-solid fa-route text-amber-400"></i> Valor do KM adicional (R$)
+              </label>
+              <input type="number" id="config-price-per-km" step="0.5" value="3.00" class="w-full bg-neutral-900 border border-neutral-800 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-500">
+            </div>
+
+            <div class="bg-neutral-950 border border-neutral-800 p-4 rounded-xl space-y-2">
+              <label class="block text-xs font-bold text-neutral-300 uppercase tracking-wider flex items-center gap-2">
+                <i class="fa-solid fa-qrcode text-emerald-400"></i> Chave Pix para Recebimento
+              </label>
+              <input type="text" id="config-pix-key" placeholder="Digite sua Chave Pix" class="w-full bg-neutral-900 border border-neutral-800 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-500">
+            </div>
+
+            <div class="bg-neutral-950 border border-neutral-800 p-4 rounded-xl space-y-3">
+              <label class="block text-xs font-bold text-neutral-300 uppercase tracking-wider flex items-center gap-2">
+                <i class="fa-solid fa-clock text-amber-400"></i> Horário e Status de Funcionamento
+              </label>
+              
+              <div>
+                <span class="block text-xs text-neutral-400 mb-1">Modo de Operação da Loja:</span>
+                <select id="config-store-mode" onchange="toggleHoursInputs()" class="w-full bg-neutral-900 border border-neutral-800 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-500">
+                  <option value="auto">Automático (Ter a Dom: 12:00 às 00:00)</option>
+                  <option value="open">Forçar Aberto Agora 🟢</option>
+                  <option value="closed">Forçar Fechado Agora 🔴</option>
+                </select>
+              </div>
+
+              <div id="hours-container" class="grid grid-cols-2 gap-3 pt-1">
+                <div>
+                  <label class="block text-xs text-neutral-400 mb-1">Horário de Abertura:</label>
+                  <input type="time" id="config-open-time" value="12:00" class="w-full bg-neutral-900 border border-neutral-800 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-500">
+                </div>
+                <div>
+                  <label class="block text-xs text-neutral-400 mb-1">Horário de Fechamento:</label>
+                  <input type="time" id="config-close-time" value="00:00" class="w-full bg-neutral-900 border border-neutral-800 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-500">
+                </div>
+              </div>
+            </div>
+
+            <div class="bg-neutral-950 border border-neutral-800 p-4 rounded-xl space-y-3">
+              <label class="block text-xs font-bold text-neutral-300 uppercase tracking-wider flex items-center gap-2">
+                <i class="fa-solid fa-key text-brand-500"></i> Segurança - Alterar PIN do Painel
+              </label>
+              
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label class="block text-xs text-neutral-400 mb-1">Novo PIN (4 dígitos):</label>
+                  <input type="password" id="config-new-pin" maxlength="4" placeholder="Ex: 4321" class="w-full bg-neutral-900 border border-neutral-800 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-500 tracking-widest text-center">
+                </div>
+                <div>
+                  <label class="block text-xs text-neutral-400 mb-1">Confirmar Novo PIN:</label>
+                  <input type="password" id="config-confirm-pin" maxlength="4" placeholder="Ex: 4321" class="w-full bg-neutral-900 border border-neutral-800 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-500 tracking-widest text-center">
+                </div>
+              </div>
+            </div>
+
+            <button onclick="saveStoreSettings()" class="w-full py-3 bg-brand-600 hover:bg-brand-500 text-white font-bold rounded-xl shadow-lg transition flex items-center justify-center gap-2">
+              <i class="fa-solid fa-floppy-disk"></i> Salvar Configurações
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- MODAL RASTREAMENTO -->
+  <div id="tracking-modal" class="fixed inset-0 z-50 bg-black/90 backdrop-blur-md hidden flex items-center justify-center p-4">
+    <div class="bg-neutral-900 border border-neutral-800 p-6 rounded-2xl max-w-md w-full space-y-5 shadow-2xl relative">
+      <div class="flex items-center justify-between border-b border-neutral-800 pb-3">
+        <h3 class="font-extrabold text-white text-lg flex items-center gap-2">
+          <i class="fa-solid fa-route text-brand-500"></i> Acompanhar Pedido
+        </h3>
+        <button onclick="closeTrackingModal()" class="text-neutral-400 hover:text-white p-1"><i class="fa-solid fa-xmark text-lg"></i></button>
+      </div>
+
+      <div class="space-y-2">
+        <label class="block text-xs text-neutral-400 font-semibold">Buscar por ID do Pedido ou Telefone:</label>
+        <div class="flex gap-2">
+          <input type="text" id="track-search-input" placeholder="Ex: 1234 ou 11999998888" class="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-brand-500">
+          <button onclick="searchAndTrackOrder()" class="px-4 py-2 bg-brand-600 hover:bg-brand-500 text-white font-bold rounded-xl text-xs transition flex-shrink-0">Buscar</button>
+        </div>
+      </div>
+
+      <div id="tracking-content" class="hidden space-y-4 pt-2">
+        <div class="bg-neutral-950 p-3 rounded-xl border border-neutral-800 flex items-center justify-between">
+          <div>
+            <span class="block text-[10px] uppercase font-bold text-neutral-500">Número do Pedido</span>
+            <span id="track-order-id" class="text-sm font-black text-brand-500">#0000</span>
+          </div>
+          <div class="text-right">
+            <span class="block text-[10px] uppercase font-bold text-neutral-500">Total do Pedido</span>
+            <span id="track-order-total" class="text-sm font-black text-emerald-400">R$ 0,00</span>
+          </div>
+        </div>
+
+        <div id="track-status-banner" class="p-3 rounded-xl border text-center text-xs font-bold"></div>
+
+        <div class="py-4 px-2 relative">
+          <div class="space-y-6 relative border-l-2 border-neutral-800 ml-4 pl-6">
+            <div id="step-pendente" class="relative group">
+              <div id="step-dot-pendente" class="absolute -left-[31px] top-0.5 w-6 h-6 rounded-full bg-neutral-800 border-2 border-neutral-700 flex items-center justify-center text-[10px] text-neutral-400">
+                <i class="fa-solid fa-clock"></i>
+              </div>
+              <h4 id="step-title-pendente" class="text-xs font-bold text-neutral-400">1. Pedido Recebido</h4>
+              <p class="text-[11px] text-neutral-500 mt-0.5">Seu pedido foi registrado no sistema e aguarda confirmação.</p>
+            </div>
+
+            <div id="step-preparo" class="relative group">
+              <div id="step-dot-preparo" class="absolute -left-[31px] top-0.5 w-6 h-6 rounded-full bg-neutral-800 border-2 border-neutral-700 flex items-center justify-center text-[10px] text-neutral-400">
+                <i class="fa-solid fa-wine-bottle"></i>
+              </div>
+              <h4 id="step-title-preparo" class="text-xs font-bold text-neutral-400">2. Em Separacão / Preparo</h4>
+              <p class="text-[11px] text-neutral-500 mt-0.5">Sua bebida está sendo gelada e separada para envio.</p>
+            </div>
+
+            <div id="step-rota" class="relative group">
+              <div id="step-dot-rota" class="absolute -left-[31px] top-0.5 w-6 h-6 rounded-full bg-neutral-800 border-2 border-neutral-700 flex items-center justify-center text-[10px] text-neutral-400">
+                <i class="fa-solid fa-motorcycle"></i>
+              </div>
+              <h4 id="step-title-rota" class="text-xs font-bold text-neutral-400">3. Saiu para Entrega</h4>
+              <p class="text-[11px] text-neutral-500 mt-0.5">O entregador já está a caminho do seu endereço em Jandira.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="pt-2">
+          <a id="track-whatsapp-link" href="#" target="_blank" class="w-full py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl text-xs transition flex items-center justify-center gap-2 shadow-lg shadow-emerald-600/20">
+            <i class="fa-brands fa-whatsapp text-sm"></i> Falar com a Adega no WhatsApp
+          </a>
+        </div>
+      </div>
+
+      <div id="tracking-empty" class="text-center py-6 text-neutral-500 space-y-2 hidden">
+        <i class="fa-solid fa-circle-check text-4xl text-emerald-500"></i>
+        <h4 class="text-sm font-bold text-white">Nenhum pedido em andamento</h4>
+        <p id="tracking-empty-text" class="text-xs text-neutral-400 max-w-xs mx-auto">Digite o número do seu pedido acima para visualizar o status de entrega.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL PRODUTO -->
+  <div id="product-modal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden flex items-center justify-center p-4">
+    <div class="bg-neutral-900 border border-neutral-800 p-6 rounded-2xl max-w-md w-full space-y-4 shadow-2xl relative max-h-[90vh] overflow-y-auto">
+      <div class="flex justify-between items-center border-b border-neutral-800 pb-3">
+        <h3 id="modal-product-title" class="font-bold text-white text-lg">Editar Produto</h3>
+        <button onclick="closeProductModal()" class="text-neutral-400 hover:text-white p-1"><i class="fa-solid fa-xmark text-lg"></i></button>
+      </div>
+
+      <form id="product-form" onsubmit="saveProduct(event)" class="space-y-3">
+        <input type="hidden" id="edit-firebase-key">
+        <input type="hidden" id="edit-id">
+
+        <div>
+          <label class="block text-xs font-semibold text-neutral-400 mb-1">Nome do Produto</label>
+          <input type="text" id="edit-name" required class="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-500">
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-semibold text-neutral-400 mb-1">Categoria</label>
+            <select id="edit-category" class="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-500">
+              <option value="Combos">Combos</option>
+              <option value="Cervejas">Cervejas</option>
+              <option value="Vinhos">Vinhos</option>
+              <option value="Destilados">Destilados</option>
+              <option value="Cachaças">Cachaças</option>
+              <option value="Tabacaria">Tabacaria</option>
+              <option value="Não Alcoólicos">Não Alcoólicos</option>
+              <option value="Gelos & Energéticos">Gelos & Energéticos</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-neutral-400 mb-1">Preço (R$)</label>
+            <input type="number" step="0.01" id="edit-price" required class="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-500">
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-neutral-400 mb-1">Descrição</label>
+          <textarea id="edit-desc" rows="2" class="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-500"></textarea>
+        </div>
+
+        <div class="space-y-2 pt-1">
+          <label class="block text-xs font-semibold text-neutral-400">Imagem do Produto</label>
+          
+          <div class="flex items-center gap-3">
+            <div id="image-preview-box" class="w-16 h-16 rounded-xl bg-neutral-950 border border-neutral-800 overflow-hidden flex items-center justify-center flex-shrink-0">
+              <i class="fa-solid fa-image text-neutral-700 text-xl" id="image-preview-placeholder"></i>
+              <img id="image-preview" class="w-full h-full object-cover hidden">
+            </div>
+            <div class="flex-1 space-y-1">
+              <label class="cursor-pointer inline-flex items-center gap-2 px-3 py-2 bg-neutral-800 hover:bg-neutral-700 text-white rounded-xl text-xs font-semibold border border-neutral-700 transition">
+                <i class="fa-solid fa-upload text-brand-500"></i> Anexar Foto
+                <input type="file" id="file-input" accept="image/*" onchange="handleImageUpload(event)" class="hidden">
+              </label>
+            </div>
+          </div>
+
+          <div class="pt-1">
+            <label class="block text-[10px] text-neutral-500 mb-1">Ou cole a URL da imagem</label>
+            <input type="text" id="edit-image-url" oninput="updateImageFromUrl()" placeholder="https://..." class="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-3 py-1.5 text-xs text-white focus:outline-none focus:border-brand-500">
+          </div>
+        </div>
+
+        <div class="flex gap-2 pt-3">
+          <button type="button" onclick="closeProductModal()" class="flex-1 py-2.5 bg-neutral-800 hover:bg-neutral-700 text-neutral-300 font-semibold rounded-xl text-xs transition">Cancelar</button>
+          <button type="submit" class="flex-1 py-2.5 bg-brand-600 hover:bg-brand-500 text-white font-bold rounded-xl text-xs shadow transition">Salvar Produto</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Botão Flutuante Carrinho -->
+  <div id="cart-floating-btn" class="fixed bottom-4 right-4 z-30">
+    <button onclick="toggleCartModal(true)" class="bg-brand-600 hover:bg-brand-500 text-white font-bold py-3 px-5 rounded-full shadow-xl flex items-center gap-3 border border-brand-400/30 transition transform hover:scale-105">
+      <div class="relative">
+        <i class="fa-solid fa-basket-shopping text-lg"></i>
+        <span id="cart-count" class="absolute -top-2 -right-2 bg-white text-brand-700 text-[10px] font-black w-4 h-4 rounded-full flex items-center justify-center">0</span>
+      </div>
+      <span>Ver Carrinho</span>
+      <span id="cart-total-badge" class="bg-brand-900/60 px-2.5 py-1 rounded-full text-xs font-bold border border-brand-500/30">R$ 0,00</span>
+    </button>
+  </div>
+
+  <!-- Modal Carrinho com Cálculo Exato por Rota via DISTANCEMATRIX.AI -->
+  <div id="cart-modal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden flex justify-end">
+    <div class="bg-neutral-900 w-full max-w-md h-full flex flex-col border-l border-neutral-800 shadow-2xl">
+      <div class="p-4 border-b border-neutral-800 flex items-center justify-between bg-neutral-950">
+        <h3 class="font-bold text-white flex items-center gap-2">
+          <i class="fa-solid fa-shopping-bag text-brand-500"></i> Seu Carrinho
+        </h3>
+        <button onclick="toggleCartModal(false)" class="text-neutral-400 hover:text-white p-2"><i class="fa-solid fa-xmark text-lg"></i></button>
+      </div>
+
+      <div class="flex-1 overflow-y-auto p-4 space-y-4" id="cart-items-container"></div>
+
+      <!-- Checkout -->
+      <div class="p-4 border-t border-neutral-800 bg-neutral-950 space-y-3">
+        <div class="space-y-2 text-xs">
+          <div class="flex justify-between text-neutral-400">
+            <span>Subtotal</span>
+            <span id="cart-subtotal" class="text-white">R$ 0,00</span>
+          </div>
+          <div class="flex justify-between text-neutral-400 items-center">
+            <span class="flex items-center gap-1">
+              Taxa Entrega 
+              <span id="delivery-distance-badge" class="text-[10px] bg-neutral-800 px-1.5 py-0.5 rounded text-amber-400 hidden">0.0 km</span>
+            </span>
+            <span id="cart-delivery-fee" class="text-white font-bold">R$ 5,00</span>
+          </div>
+          <div id="km-loading-spinner" class="hidden text-[10px] text-amber-400 flex items-center gap-1">
+            <i class="fa-solid fa-spinner animate-spin"></i> Consultando DistanceMatrix.AI...
+          </div>
+          <div class="flex justify-between text-base font-bold text-white pt-2 border-t border-neutral-800">
+            <span>Total</span>
+            <span id="cart-final-total" class="text-brand-500">R$ 0,00</span>
+          </div>
+        </div>
+
+        <div class="space-y-2 pt-2">
+          <input type="text" id="checkout-name" placeholder="Seu Nome completo" class="w-full bg-neutral-900 border border-neutral-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-brand-500">
+          <input type="text" id="checkout-phone" placeholder="WhatsApp / Telefone" class="w-full bg-neutral-900 border border-neutral-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-brand-500">
+          
+          <div class="relative">
+            <input type="text" id="checkout-address" oninput="handleAddressTyping()" placeholder="Rua, Número, Bairro em Jandira" class="w-full bg-neutral-900 border border-neutral-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-brand-500 pr-8">
+            <i class="fa-solid fa-location-crosshairs absolute right-3 top-1/2 -translate-y-1/2 text-neutral-500 text-xs cursor-pointer hover:text-brand-500" onclick="getCurrentLocation()" title="Usar minha localização GPS exata"></i>
+          </div>
+
+          <select id="checkout-payment" onchange="toggleChangeInput()" class="w-full bg-neutral-900 border border-neutral-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-brand-500">
+            <option value="Pix (Na Entrega - Maquininha)">Pix (Na Entrega - QR Code na Maquininha)</option>
+            <option value="Cartão de Crédito">Cartão de Crédito (Na entrega)</option>
+            <option value="Cartão de Débito">Cartão de Débito (Na entrega)</option>
+            <option value="Dinheiro">Dinheiro</option>
+          </select>
+
+          <input type="text" id="checkout-change" placeholder="Precisa de troco para quanto?" class="w-full bg-neutral-900 border border-neutral-800 rounded-xl px-3 py-2 text-xs text-white hidden focus:outline-none focus:border-brand-500">
+        </div>
+
+        <button onclick="submitOrder()" id="checkout-submit-btn" class="w-full py-3 bg-brand-600 hover:bg-brand-500 text-white font-bold rounded-xl shadow-lg shadow-brand-600/30 transition">
+          Confirmar e Enviar Pedido
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyDwwa04zYl8GsAK9EycqLl5mddYOEShRIQ",
+      authDomain: "adegaalves.firebaseapp.com",
+      databaseURL: "https://adegaalves-default-rtdb.firebaseio.com",
+      projectId: "adegaalves",
+      storageBucket: "adegaalves.firebasestorage.app",
+      messagingSenderId: "41959792561",
+      appId: "1:41959792561:web:46424fe1ba936cbee1a790"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    const STORE_WHATSAPP_NUMBER = "5511913356978"; 
+    
+    // CONFIGURAÇÕES DISTANCE MATRIX AI
+    const DISTANCE_MATRIX_API_KEY = "UGobjwSKXX2sU5px1fH8r1OOhtNfoF4xgU83DpGJdS3Qm5NCj0M3K4oSSIZlg5Ag";
+    const STORE_ADDRESS_ORIGIN = "Rua São Bernardo do Campo, 210, Jandira, SP, Brasil";
+
+    const DEFAULT_PRODUCTS = [
+      { id: 101, name: "Água Mineral 1,5L", category: "Não Alcoólicos", price: 5.00, desc: "Garrafa 1,5L sem gás", image: "https://images.unsplash.com/photo-1548839140-29a749e1bc4e?w=500", available: true },
+      { id: 102, name: "Água Mineral 500ml", category: "Não Alcoólicos", price: 2.50, desc: "Garrafa 500ml sem gás", image: "https://images.unsplash.com/photo-1523362628745-0c100150b504?w=500", available: true },
+      { id: 103, name: "Água com Gás 500ml", category: "Não Alcoólicos", price: 4.00, desc: "Garrafa 500ml com gás", image: "https://images.unsplash.com/photo-1559839914-17aae19cec71?w=500", available: true },
+      { id: 104, name: "H2OH! 500ml", category: "Não Alcoólicos", price: 8.00, desc: "Bebida levemente gaseificada", image: "", available: true },
+      { id: 105, name: "Energético Bally 2L", category: "Gelos & Energéticos", price: 12.00, desc: "Garrafa 2L", image: "", available: true },
+      { id: 106, name: "Energético Long Night", category: "Gelos & Energéticos", price: 8.00, desc: "Lata energético", image: "", available: true },
+      { id: 107, name: "Energético Vibe", category: "Gelos & Energéticos", price: 10.00, desc: "Lata energético", image: "", available: true },
+      { id: 108, name: "Energético Monster", category: "Gelos & Energéticos", price: 12.00, desc: "Lata 473ml", image: "", available: true },
+      { id: 109, name: "Energético Red Bull 250ml", category: "Gelos & Energéticos", price: 12.00, desc: "Lata 250ml", image: "", available: true },
+      { id: 201, name: "Cachaça 51 1L", category: "Cachaças", price: 16.00, desc: "Garrafa 1L (Dose: R$ 4,00)", image: "", available: true },
+      { id: 202, name: "Aperol Aperitivo 750ml", category: "Cachaças", price: 60.00, desc: "Garrafa 750ml", image: "", available: true },
+      { id: 203, name: "Rum Bacardi Carta Blanca 1L", category: "Cachaças", price: 50.00, desc: "Garrafa 1L", image: "", available: true },
+      { id: 204, name: "Liqueur Bananinha 1L", category: "Cachaças", price: 45.00, desc: "Garrafa 1L", image: "", available: true },
+      { id: 205, name: "Campari Aperitivo 900ml", category: "Cachaças", price: 70.00, desc: "Garrafa 900ml (Dose: R$ 10,00)", image: "", available: true },
+      { id: 206, name: "Cana Boa", category: "Cachaças", price: 3.00, desc: "Dose / Garrafinha", image: "", available: true },
+      { id: 207, name: "Canelinha Garrafa", category: "Cachaças", price: 18.00, desc: "Aperitivo de Canela Garrafa", image: "", available: true },
+      { id: 208, name: "Canelinha Copão", category: "Cachaças", price: 10.00, desc: "Copão preparado", image: "", available: true },
+      { id: 209, name: "Combo Canelinha", category: "Combos", price: 38.00, desc: "Combo especial Canelinha", image: "", available: true },
+      { id: 210, name: "Catuaba Selvagem 1L", category: "Cachaças", price: 18.00, desc: "Garrafa 1L", image: "", available: true },
+      { id: 211, name: "Vermouth Contini", category: "Cachaças", price: 35.00, desc: "Garrafa Contini (MM: R$ 5,00)", image: "", available: true },
+      { id: 212, name: "Corote Flavored 500ml", category: "Cachaças", price: 6.00, desc: "Coquetel alcoólico", image: "", available: true },
+      { id: 213, name: "Cynar Aperitivo", category: "Cachaças", price: 30.00, desc: "Garrafa (Dose: R$ 5,00)", image: "", available: true },
+      { id: 214, name: "Conhaque Domecq 1L", category: "Cachaças", price: 45.00, desc: "Garrafa 1L (Dose: R$ 7,00)", image: "", available: true },
+      { id: 215, name: "Conhaque Dreher 900ml", category: "Cachaças", price: 26.00, desc: "Garrafa (Dose: R$ 4,00)", image: "", available: true },
+      { id: 216, name: "Duelo Tradicional", category: "Cachaças", price: 3.50, desc: "Coquetel alcoólico", image: "", available: true },
+      { id: 217, name: "Duelo Sabores", category: "Cachaças", price: 4.00, desc: "Sabores variados", image: "", available: true },
+      { id: 218, name: "Gnutre Tradicional", category: "Cachaças", price: 15.00, desc: "Garrafa", image: "", available: true },
+      { id: 219, name: "Gnutre Groselha", category: "Cachaças", price: 12.00, desc: "Sabor Groselha", image: "", available: true },
+      { id: 220, name: "Gin Golf", category: "Cachaças", price: 35.00, desc: "Garrafa (Dose: R$ 5,00)", image: "", available: true },
+      { id: 221, name: "Jurupinga 970ml", category: "Cachaças", price: 35.00, desc: "Vinho Suave Composto", image: "", available: true },
+      { id: 222, name: "Cachaça Kariri", category: "Cachaças", price: 22.00, desc: "Garrafa (Dose: R$ 7,00)", image: "", available: true },
+      { id: 223, name: "Rum Montilla Carta Branca", category: "Cachaças", price: 45.00, desc: "Garrafa 1L", image: "", available: true },
+      { id: 224, name: "Aperitivo Para Tudo", category: "Cachaças", price: 16.00, desc: "Garrafa (Dose: R$ 4,00)", image: "", available: true },
+      { id: 225, name: "Pararine", category: "Cachaças", price: 18.00, desc: "Garrafa aperitivo", image: "", available: true },
+      { id: 226, name: "Pitu 1L Tradicional", category: "Cachaças", price: 18.00, desc: "Cachaça Pitu Garrafa 1L", image: "", available: true },
+      { id: 227, name: "Pitu Banana", category: "Cachaças", price: 7.00, desc: "Garrafinha saborizada", image: "", available: true },
+      { id: 228, name: "Pitu Limão", category: "Cachaças", price: 6.00, desc: "Garrafinha saborizada", image: "", available: true },
+      { id: 229, name: "Pitu Caju", category: "Cachaças", price: 7.00, desc: "Garrafinha saborizada", image: "", available: true },
+      { id: 230, name: "Pitu Lata 350ml", category: "Cachaças", price: 6.00, desc: "Lata 350ml", image: "", available: true },
+      { id: 231, name: "Cabaré Prata", category: "Cachaças", price: 54.00, desc: "Cachaça Cabaré Extra Premium Prata", image: "", available: true },
+      { id: 232, name: "Cabaré Ouro", category: "Cachaças", price: 52.00, desc: "Cachaça Cabaré Ouro Envelhecida", image: "", available: true },
+      { id: 233, name: "Cabaré Amburana", category: "Cachaças", price: 65.00, desc: "Armazenada em tonéis de Amburana", image: "", available: true },
+      { id: 234, name: "Cabaré Fire", category: "Cachaças", price: 70.00, desc: "Cachaça com Canela", image: "", available: true },
+      { id: 235, name: "Conhaque Presidente", category: "Cachaças", price: 20.00, desc: "Garrafa (Dose: R$ 4,00)", image: "", available: true },
+      { id: 236, name: "Saquê Culinário / Bebida", category: "Cachaças", price: 25.00, desc: "Garrafa Saquê Azuma Kirin", image: "", available: true },
+      { id: 237, name: "Aperitivo São Francisco", category: "Cachaças", price: 32.00, desc: "Garrafa (Dose: R$ 5,00)", image: "", available: true },
+      { id: 238, name: "Conhaque São João da Barra", category: "Cachaças", price: 30.00, desc: "Garrafa", image: "", available: true },
+      { id: 239, name: "Cachaça Seleta 1L", category: "Cachaças", price: 50.00, desc: "Cachaça Artesanal Ouro", image: "", available: true },
+      { id: 240, name: "Velho Barreiro 910ml", category: "Cachaças", price: 16.00, desc: "Garrafa (Dose: R$ 4,00)", image: "", available: true },
+      { id: 241, name: "Cachaça Ypióca Ouro / Prata", category: "Cachaças", price: 50.00, desc: "Garrafa com Palha", image: "", available: true },
+      { id: 301, name: "Cerveja Amstel (Fardo / Lata)", category: "Cervejas", price: 37.00, desc: "Fardo de Latas (Unidade Lata: R$ 4,00)", image: "", available: true },
+      { id: 302, name: "Cerveja Brahma 269ml", category: "Cervejas", price: 46.00, desc: "Fardo de Latas (Unidade Lata: R$ 4,50)", image: "", available: true },
+      { id: 303, name: "Cerveja Brahma 350ml", category: "Cervejas", price: 48.00, desc: "Fardo de Latas (Unidade Lata: R$ 5,00)", image: "", available: true },
+      { id: 304, name: "Cerveja Budweiser Pack 8 Unid", category: "Cervejas", price: 28.00, desc: "Pack c/ 8 Latas (Lata Solta: R$ 3,50)", image: "", available: true },
+      { id: 305, name: "Cerveja Budweiser Pack 15 Unid", category: "Cervejas", price: 52.00, desc: "Pack c/ 15 Latas (Lata Solta: R$ 3,50)", image: "", available: true },
+      { id: 306, name: "Cerveja Heineken (Fardo / Lata)", category: "Cervejas", price: 38.00, desc: "Fardo de Latas (Lata Solta: R$ 5,00)", image: "", available: true },
+      { id: 307, name: "Cerveja Império (Fardo / Lata)", category: "Cervejas", price: 50.00, desc: "Fardo de Latas (Lata Solta: R$ 4,00)", image: "", available: true },
+      { id: 308, name: "Cerveja Itaipava 350ml (Fardo)", category: "Cervejas", price: 40.00, desc: "Fardo de Latas 350ml (Lata Solta: R$ 3,50)", image: "", available: true },
+      { id: 309, name: "Cerveja Itaipava Zero Álcool (Fardo)", category: "Cervejas", price: 60.00, desc: "Fardo Sem Álcool (Lata Solta: R$ 5,50)", image: "", available: true },
+      { id: 310, name: "Cerveja Original Pack 15 Unid", category: "Cervejas", price: 55.00, desc: "Pack c/ 15 Latas (Lata Solta: R$ 4,00)", image: "", available: true },
+      { id: 311, name: "Cerveja Skol Pack 8 Unid", category: "Cervejas", price: 32.00, desc: "Pack c/ 8 Latas (Lata Solta: R$ 4,00)", image: "", available: true },
+      { id: 312, name: "Cerveja Petra (Fardo / Lata)", category: "Cervejas", price: 34.00, desc: "Fardo de Latas (Lata Solta: R$ 3,00)", image: "", available: true },
+      { id: 313, name: "Cerveja Skol (Fardo / Lata)", category: "Cervejas", price: 42.00, desc: "Fardo de Latas (Lata Solta: R$ 3,50)", image: "", available: true },
+      { id: 314, name: "Cerveja Spaten (Fardo / Lata)", category: "Cervejas", price: 36.00, desc: "Fardo Munich Helles (Lata Solta: R$ 5,00)", image: "", available: true },
+      { id: 315, name: "Long Neck Budweiser (Fardo c/ 6)", category: "Cervejas", price: 48.00, desc: "Long Neck (Solta: R$ 8,00)", image: "", available: true },
+      { id: 316, name: "Long Neck Corona 330ml", category: "Cervejas", price: 8.00, desc: "Unidade Long Neck", image: "", available: true },
+      { id: 317, name: "Long Neck Corona Zero", category: "Cervejas", price: 8.50, desc: "Unidade Long Neck Sem Álcool", image: "", available: true },
+      { id: 318, name: "Long Neck Spaten", category: "Cervejas", price: 8.00, desc: "Unidade Long Neck", image: "", available: true },
+      { id: 319, name: "Long Neck Stella Artois", category: "Cervejas", price: 8.00, desc: "Unidade Long Neck 330ml", image: "", available: true },
+      { id: 320, name: "Long Neck Heineken 330ml", category: "Cervejas", price: 8.00, desc: "Unidade Long Neck", image: "", available: true },
+      { id: 321, name: "Long Neck Heineken Zero 330ml", category: "Cervejas", price: 8.50, desc: "Unidade Long Neck Sem Álcool", image: "", available: true },
+      { id: 322, name: "Skol Beats Long Neck / Lata", category: "Cervejas", price: 10.00, desc: "Sabor Secret/Senses/150bpm", image: "", available: true },
+      { id: 323, name: "Smirnoff Ice Long Neck 275ml", category: "Cervejas", price: 10.00, desc: "Bebida mista refrescante", image: "", available: true },
+      { id: 324, name: "Xeque-Mate Lata 355ml", category: "Cervejas", price: 10.00, desc: "Chá mate, rum, guaraná e limão", image: "", available: true },
+      { id: 401, name: "Gin Beefeater Laranja 750ml", category: "Destilados", price: 200.00, desc: "Gin Beefeater Blood Orange", image: "", available: true },
+      { id: 402, name: "Combo Gin Beefeater Laranja", category: "Combos", price: 240.00, desc: "1 Beefeater Laranja + Energéticos + Gelo de Sabor", image: "", available: true },
+      { id: 403, name: "Gin Beefeater Sabores 750ml", category: "Destilados", price: 140.00, desc: "Beefeater Pink / Lemon", image: "", available: true },
+      { id: 404, name: "Combo Gin Beefeater Sabores", category: "Combos", price: 190.00, desc: "1 Beefeater Sabores + Energéticos (Copo: R$ 40,00)", image: "", available: true },
+      { id: 405, name: "Gin Beefeater Tradicional 750ml", category: "Destilados", price: 120.00, desc: "London Dry 750ml", image: "", available: true },
+      { id: 406, name: "Combo Gin Beefeater Tradicional", category: "Combos", price: 160.00, desc: "1 Beefeater Tradicional + Energéticos (Copo: R$ 35,00)", image: "", available: true },
+      { id: 407, name: "Gin Bombay Sapphire 750ml", category: "Destilados", price: 120.00, desc: "London Dry Importado", image: "", available: true },
+      { id: 408, name: "Combo Gin Bombay Sapphire", category: "Combos", price: 165.00, desc: "1 Bombay Sapphire + Energéticos + Gelo", image: "", available: true },
+      { id: 409, name: "Gin Eternity 900ml", category: "Destilados", price: 30.00, desc: "Garrafa de Gin", image: "", available: true },
+      { id: 410, name: "Combo Gin Eternity", category: "Combos", price: 50.00, desc: "1 Eternity + Energético 2L + Gelo Saborizado", image: "", available: true },
+      { id: 411, name: "Gin Gordon's London Dry 750ml", category: "Destilados", price: 80.00, desc: "Garrafa 750ml", image: "", available: true },
+      { id: 412, name: "Combo Gin Gordon's", category: "Combos", price: 125.00, desc: "1 Gordon's + Energéticos + Gelo", image: "", available: true },
+      { id: 413, name: "Gin Kiryos", category: "Destilados", price: 20.00, desc: "Garrafa de Gin Kiryos", image: "", available: true },
+      { id: 414, name: "Combo Gin Kiryos", category: "Combos", price: 40.00, desc: "1 Gin Kiryos + Energético 2L", image: "", available: true },
+      { id: 415, name: "Gin Rock's 1L", category: "Destilados", price: 40.00, desc: "Garrafa 1L", image: "", available: true },
+      { id: 416, name: "Combo Gin Rock's", category: "Combos", price: 60.00, desc: "1 Gin Rock's + Energético 2L + Gelo", image: "", available: true },
+      { id: 417, name: "Gin Tanqueray Sabores 750ml", category: "Destilados", price: 165.00, desc: "Sevilla / Royale / Rangpur", image: "", available: true },
+      { id: 418, name: "Combo Gin Tanqueray Sabores", category: "Combos", price: 205.00, desc: "1 Tanqueray Sabores + Red Bull + Gelo", image: "", available: true },
+      { id: 419, name: "Gin Tanqueray Tradicional 750ml", category: "Destilados", price: 120.00, desc: "London Dry Importado", image: "", available: true },
+      { id: 420, name: "Combo Gin Tanqueray Tradicional", category: "Combos", price: 165.00, desc: "1 Tanqueray Tradicional + Red Bull + Gelo", image: "", available: true },
+      { id: 501, name: "Licor 43 Chocolate 700ml", category: "Destilados", price: 190.00, desc: "Licor 43 Chocolate Espanha", image: "", available: true },
+      { id: 502, name: "Licor 43 Edição Espanha", category: "Destilados", price: 220.00, desc: "Edição Especial Espanha 700ml", image: "", available: true },
+      { id: 503, name: "Licor 43 Orchata / Barista", category: "Destilados", price: 210.00, desc: "Edição Especial Orchata ou Barista", image: "", available: true },
+      { id: 504, name: "Licor 43 Tradicional 700ml", category: "Destilados", price: 165.00, desc: "Diego Zamora Licor 43 Espanhol", image: "", available: true },
+      { id: 505, name: "Licor Ballena Morango com Creme", category: "Destilados", price: 160.00, desc: "Tequila com Creme de Morango", image: "", available: true },
+      { id: 506, name: "Licor Ballena Chocolate", category: "Destilados", price: 175.00, desc: "Edição Especial Chocolate", image: "", available: true },
+      { id: 507, name: "Licor Ballena Coco", category: "Destilados", price: 175.00, desc: "Edição Especial Coco", image: "", available: true },
+      { id: 508, name: "Licor Bem Casado", category: "Destilados", price: 55.00, desc: "Garrafa Licor Bem Casado", image: "", available: true },
+      { id: 509, name: "Licor Don Luiz", category: "Destilados", price: 90.00, desc: "Licor Doce de Leite", image: "", available: true },
+      { id: 510, name: "Licor Malibu Rum de Coco 750ml", category: "Destilados", price: 70.00, desc: "Rum Caribenho com Coco", image: "", available: true },
+      { id: 511, name: "Combo Malibu", category: "Combos", price: 100.00, desc: "1 Malibu + Suco ou Energético", image: "", available: true },
+      { id: 512, name: "Licor Peachtree Pêssego", category: "Destilados", price: 170.00, desc: "Licor fino de Pêssego", image: "", available: true },
+      { id: 513, name: "Espumante Chandon Brut / Passion", category: "Vinhos", price: 120.00, desc: "Garrafa Espumante 750ml", image: "", available: true },
+      { id: 601, name: "Coca-Cola 2L", category: "Não Alcoólicos", price: 14.00, desc: "Garrafa PET 2 Litros", image: "", available: true },
+      { id: 602, name: "Coca-Cola Retornável (C/ Troca)", category: "Não Alcoólicos", price: 8.50, desc: "Com a entrega do casco vazio", image: "", available: true },
+      { id: 603, name: "Coca-Cola Retornável (Sem Casco)", category: "Não Alcoólicos", price: 14.00, desc: "Incluso valor do garrafão", image: "", available: true },
+      { id: 604, name: "Guaraná Dolly 2L", category: "Não Alcoólicos", price: 7.00, desc: "Garrafa 2 Litros", image: "", available: true },
+      { id: 605, name: "Fanta Laranja / Uva 2L", category: "Não Alcoólicos", price: 12.00, desc: "Garrafa 2 Litros", image: "", available: true },
+      { id: 606, name: "Guaraná Antarctica 2L", category: "Não Alcoólicos", price: 12.00, desc: "Garrafa 2 Litros", image: "", available: true },
+      { id: 607, name: "Sprite 2L", category: "Não Alcoólicos", price: 12.00, desc: "Garrafa 2 Litros", image: "", available: true },
+      { id: 608, name: "Sukita Laranja 2L", category: "Não Alcoólicos", price: 8.00, desc: "Garrafa 2 Litros", image: "", available: true },
+      { id: 609, name: "Tubaína 2L", category: "Não Alcoólicos", price: 7.00, desc: "Garrafa 2 Litros", image: "", available: true },
+      { id: 610, name: "Refrigerante Lata (Variados)", category: "Não Alcoólicos", price: 5.00, desc: "Lata 350ml (Coca, Guaraná, Fanta, Sprite)", image: "", available: true },
+      { id: 611, name: "Suco Del Valle 1L", category: "Não Alcoólicos", price: 12.00, desc: "Caixa 1L", image: "", available: true },
+      { id: 612, name: "Suco Del Valle Lata", category: "Não Alcoólicos", price: 6.00, desc: "Lata 290ml", image: "", available: true },
+      { id: 613, name: "Gatorade 500ml", category: "Não Alcoólicos", price: 8.00, desc: "Isotónico 500ml", image: "", available: true },
+      { id: 614, name: "Suco Prats 900ml", category: "Não Alcoólicos", price: 14.00, desc: "Suco 100% Integral", image: "", available: true },
+      { id: 700, name: "Alumínio Narguile (Unidade Solta)", category: "Tabacaria", price: 0.50, desc: "Folha solta de alumínio para narguile", image: "", available: true },
+      { id: 701, name: "Alumínio Narguile (Caixa/Rolo)", category: "Tabacaria", price: 20.00, desc: "Rolo ou Caixa fechada", image: "", available: true },
+      { id: 702, name: "Borracha de Rosh", category: "Tabacaria", price: 5.00, desc: "Vedação para rosh", image: "", available: true },
+      { id: 703, name: "Borracha de Mangueira", category: "Tabacaria", price: 5.00, desc: "Vedação mangueira", image: "", available: true },
+      { id: 704, name: "Borracha de Vaso", category: "Tabacaria", price: 8.00, desc: "Vedação vaso narguile", image: "", available: true },
+      { id: 705, name: "Carvão para Narguile 1kg", category: "Tabacaria", price: 40.00, desc: "Carvão de coco 1kg", image: "", available: true },
+      { id: 706, name: "Carvão para Narguile 500g", category: "Tabacaria", price: 35.00, desc: "Carvão de coco 500g", image: "", available: true },
+      { id: 707, name: "Carvão Solto", category: "Tabacaria", price: 1.00, desc: "Unidade do carvão", image: "", available: true },
+      { id: 708, name: "Cuia de Silicone", category: "Tabacaria", price: 9.00, desc: "Cuia para preparo", image: "", available: true },
+      { id: 709, name: "Dixavador", category: "Tabacaria", price: 5.00, desc: "Triturador de ervas", image: "", available: true },
+      { id: 710, name: "Forninho Acendedor a Gás", category: "Tabacaria", price: 120.00, desc: "Acendedor portátil", image: "", available: true },
+      { id: 711, name: "Refil de Gás", category: "Tabacaria", price: 35.00, desc: "Lata de gás refil", image: "", available: true },
+      { id: 712, name: "Forninho Elétrico Médio", category: "Tabacaria", price: 40.00, desc: "Acendedor elétrico", image: "", available: true },
+      { id: 713, name: "Forninho Elétrico Pequeno", category: "Tabacaria", price: 30.00, desc: "Acendedor elétrico", image: "", available: true },
+      { id: 714, name: "Isqueiro Bic / Tradicional", category: "Tabacaria", price: 3.00, desc: "Unidade", image: "", available: true },
+      { id: 715, name: "Rosh de Cerâmica / Silicone", category: "Tabacaria", price: 25.00, desc: "Queimador narguile", image: "", available: true },
+      { id: 716, name: "Prato para Narguile", category: "Tabacaria", price: 20.00, desc: "Prato de alumínio", image: "", available: true },
+      { id: 717, name: "Piteira Pequena", category: "Tabacaria", price: 5.00, desc: "Piteira higiênica", image: "", available: true },
+      { id: 718, name: "Piteira Longa", category: "Tabacaria", price: 6.00, desc: "Piteira higiênica longa", image: "", available: true },
+      { id: 719, name: "Seda Zomo", category: "Tabacaria", price: 5.00, desc: "Seda (Solta: R$ 0,50)", image: "", available: true },
+      { id: 720, name: "Seda Sadhu Tradicional", category: "Tabacaria", price: 6.00, desc: "Livreto de seda", image: "", available: true },
+      { id: 721, name: "Seda Sadhu Longa", category: "Tabacaria", price: 8.00, desc: "Livreto King Size", image: "", available: true },
+      { id: 722, name: "Tabaco Crema", category: "Tabacaria", price: 17.00, desc: "Pacote de tabaco", image: "", available: true },
+      { id: 723, name: "Tabaco Amsterdam", category: "Tabacaria", price: 17.00, desc: "Pacote de tabaco 25g", image: "", available: true },
+      { id: 724, name: "Tabaco Tabaquin", category: "Tabacaria", price: 17.00, desc: "Pacote de tabaco", image: "", available: true },
+      { id: 725, name: "Tesoura para Tabaco", category: "Tabacaria", price: 15.00, desc: "Tesourinha de mola", image: "", available: true },
+      { id: 726, name: "Vaso de Narguile Grande", category: "Tabacaria", price: 80.00, desc: "Vaso de vidro grande", image: "", available: true },
+      { id: 727, name: "Vaso de Narguile Pequeno", category: "Tabacaria", price: 35.00, desc: "Vaso de vidro pequeno", image: "", available: true },
+      { id: 728, name: "Essência Ziggy (Sabores)", category: "Tabacaria", price: 12.00, desc: "Caixinha 50g", image: "", available: true },
+      { id: 729, name: "Essência Primal", category: "Tabacaria", price: 12.00, desc: "Caixinha 50g", image: "", available: true },
+      { id: 730, name: "Essência Zomo (Sabores)", category: "Tabacaria", price: 11.00, desc: "Caixinha 50g", image: "", available: true },
+      { id: 731, name: "Essência Adalya", category: "Tabacaria", price: 18.00, desc: "Caixinha 50g Premium", image: "", available: true },
+      { id: 732, name: "Essência Love 66 Adalya", category: "Tabacaria", price: 20.00, desc: "Sabor Love 66 50g", image: "", available: true },
+      { id: 733, name: "Essência Haze", category: "Tabacaria", price: 20.00, desc: "Caixinha 50g Premium", image: "", available: true },
+      { id: 734, name: "Essência Nay", category: "Tabacaria", price: 13.00, desc: "Caixinha 50g", image: "", available: true },
+      { id: 735, name: "Essência Magic", category: "Tabacaria", price: 13.00, desc: "Caixinha 50g", image: "", available: true },
+      { id: 736, name: "Essência Lucky", category: "Tabacaria", price: 13.00, desc: "Caixinha 50g", image: "", available: true },
+      { id: 737, name: "Essência Onix", category: "Tabacaria", price: 13.00, desc: "Caixinha 50g", image: "", available: true },
+      { id: 801, name: "Tequila Jose Cuervo Ouro 750ml", category: "Destilados", price: 120.00, desc: "Jose Cuervo Especial Reposado", image: "", available: true },
+      { id: 802, name: "Tequila Jose Cuervo Prata 750ml", category: "Destilados", price: 110.00, desc: "Jose Cuervo Especial Silver", image: "", available: true },
+      { id: 803, name: "Tequi Loka", category: "Destilados", price: 35.00, desc: "Coquetel de tequila", image: "", available: true },
+      { id: 804, name: "Tequi Love", category: "Destilados", price: 38.00, desc: "Coquetel alcoólico com tequila", image: "", available: true },
+      { id: 901, name: "Vinho Bella Aurora Suave", category: "Vinhos", price: 18.00, desc: "Vinho de Mesa Suave", image: "", available: true },
+      { id: 902, name: "Vinho Bella Aurora Seco", category: "Vinhos", price: 19.00, desc: "Vinho de Mesa Seco", image: "", available: true },
+      { id: 903, name: "Cantinho do Valle 500ml", category: "Vinhos", price: 6.00, desc: "Coquetel de Vinho", image: "", available: true },
+      { id: 904, name: "Vinho Dom Bosco Suave 750ml", category: "Vinhos", price: 18.00, desc: "Vinho Tinto Suave", image: "", available: true },
+      { id: 905, name: "Vinho Dom Bosco Seco 750ml", category: "Vinhos", price: 19.00, desc: "Vinho Tinto Seco", image: "", available: true },
+      { id: 906, name: "Chopp de Vinho Draft 600ml", category: "Vinhos", price: 12.00, desc: "Garrafa Draft Chopp de Vinho", image: "", available: true },
+      { id: 907, name: "Vinho Pergola Suave 1L", category: "Vinhos", price: 25.00, desc: "Vinho Tinto Suave 1L", image: "", available: true },
+      { id: 908, name: "Vinho Pergola Seco 1L", category: "Vinhos", price: 26.00, desc: "Vinho Tinto Seco 1L", image: "", available: true },
+      { id: 909, name: "Vinho Santomé Suave", category: "Vinhos", price: 22.00, desc: "Garrafa Suave", image: "", available: true },
+      { id: 910, name: "Vinho Santomé Seco", category: "Vinhos", price: 23.00, desc: "Garrafa Seco", image: "", available: true },
+      { id: 1001, name: "Vodka Absolut Tradicional 1L", category: "Destilados", price: 100.00, desc: "Garrafa 1L Sueca Importada", image: "", available: true },
+      { id: 1002, name: "Combo Vodka Absolut Tradicional", category: "Combos", price: 150.00, desc: "1 Absolut 1L + Energéticos + Gelo de Sabor", image: "", available: true },
+      { id: 1003, name: "Vodka Absolut Sabores 1L", category: "Destilados", price: 95.00, desc: "Vanilla / Apeach / Mango / Watermelon", image: "", available: true },
+      { id: 1004, name: "Combo Vodka Absolut Sabores", category: "Combos", price: 140.00, desc: "1 Absolut Sabores + Energéticos + Gelo", image: "", available: true },
+      { id: 1005, name: "Vodka Askov 900ml", category: "Destilados", price: 18.00, desc: "Garrafa Tradicional / Sabores", image: "", available: true },
+      { id: 1006, name: "Vodka Balalaika 1L", category: "Destilados", price: 17.00, desc: "Garrafa 1L", image: "", available: true },
+      { id: 1007, name: "Vodka Cîroc Red Berry 750ml", category: "Destilados", price: 250.00, desc: "Ultra Premium Francesa", image: "", available: true },
+      { id: 1008, name: "Combo Cîroc Red Berry", category: "Combos", price: 290.00, desc: "1 Cîroc Red Berry + 5 Red Bull + Gelo", image: "", available: true },
+      { id: 1009, name: "Vodka Cîroc Sabores 750ml", category: "Destilados", price: 350.00, desc: "Peach / Coconut / Mango", image: "", available: true },
+      { id: 1010, name: "Combo Cîroc Sabores", category: "Combos", price: 400.00, desc: "1 Cîroc Sabores + 5 Red Bull + Gelo", image: "", available: true },
+      { id: 1011, name: "Vodka Grey Goose Tradicional 750ml", category: "Destilados", price: 155.00, desc: "Ultra Premium Francesa", image: "", available: true },
+      { id: 1012, name: "Combo Grey Goose Tradicional", category: "Combos", price: 205.00, desc: "1 Grey Goose + 5 Red Bull + Gelo", image: "", available: true },
+      { id: 1013, name: "Vodka Grey Goose Sabores 750ml", category: "Destilados", price: 180.00, desc: "L'Orange / La Poire", image: "", available: true },
+      { id: 1014, name: "Combo Grey Goose Sabores", category: "Combos", price: 230.00, desc: "1 Grey Goose Sabores + Red Bull + Gelo", image: "", available: true },
+      { id: 1015, name: "Vodka Intencion 900ml", category: "Destilados", price: 15.00, desc: "Garrafa de Vodka", image: "", available: true },
+      { id: 1016, name: "Vodka Smirnoff 998ml", category: "Destilados", price: 45.00, desc: "Garrafa No 21", image: "", available: true },
+      { id: 1017, name: "Combo Smirnoff + Energético Vibe", category: "Combos", price: 75.00, desc: "1 Smirnoff 1L + 1 Energético Vibe 2L + Gelo", image: "", available: true },
+      { id: 1018, name: "Combo Smirnoff + Red Bull", category: "Combos", price: 100.00, desc: "1 Smirnoff 1L + 4 Red Bull 250ml + Gelo", image: "", available: true },
+      { id: 1101, name: "Whisky Ballantine's Finest 1L", category: "Destilados", price: 85.00, desc: "Whisky Escocês 1L", image: "", available: true },
+      { id: 1102, name: "Combo Ballantine's + Vibe 2L", category: "Combos", price: 105.00, desc: "1 Ballantine's Finest + Energético Vibe 2L + Gelo", image: "", available: true },
+      { id: 1103, name: "Combo Ballantine's + Red Bull", category: "Combos", price: 130.00, desc: "1 Ballantine's Finest + 4 Red Bull + Gelo", image: "", available: true },
+      { id: 1104, name: "Whisky Ballantine's 12 Anos 1L", category: "Destilados", price: 160.00, desc: "Garrafa 1L 12 Anos", image: "", available: true },
+      { id: 1105, name: "Combo Ballantine's 12 Anos", category: "Combos", price: 200.00, desc: "1 Ballantine's 12A + Red Bull + Gelo de Sabor", image: "", available: true },
+      { id: 1106, name: "Whisky Ballantine's Wild / Abacaxi 1L", category: "Destilados", price: 95.00, desc: "Whisky Saborizado Abacaxi", image: "", available: true },
+      { id: 1107, name: "Combo Ballantine's Abacaxi + Vibe", category: "Combos", price: 125.00, desc: "1 Ballantine's Abacaxi + Energético 2L + Gelo", image: "", available: true },
+      { id: 1108, name: "Combo Ballantine's Abacaxi + Red Bull", category: "Combos", price: 145.00, desc: "1 Ballantine's Abacaxi + 4 Red Bull + Gelo de Coco", image: "", available: true },
+      { id: 1109, name: "Whisky Johnnie Walker Black Label 1L", category: "Destilados", price: 195.00, desc: "Whisky Escocês 12 Anos 1L", image: "", available: true },
+      { id: 1110, name: "Combo Black Label", category: "Combos", price: 235.00, desc: "1 Black Label 1L + 4 Red Bull + Gelo de Sabor", image: "", available: true },
+      { id: 1111, name: "Whisky Double Black Label 1L", category: "Destilados", price: 285.00, desc: "Johnnie Walker Double Black 1L", image: "", available: true },
+      { id: 1112, name: "Combo Double Black Label", category: "Combos", price: 330.00, desc: "1 Double Black + 5 Red Bull + Gelo de Sabor", image: "", available: true },
+      { id: 1113, name: "Whisky Buchanan's 12 Anos 1L", category: "Destilados", price: 210.00, desc: "Whisky Escocês 1L", image: "", available: true },
+      { id: 1114, name: "Combo Buchanan's 12 Anos", category: "Combos", price: 250.00, desc: "1 Buchanan's + 4 Red Bull + Gelo de Coco", image: "", available: true },
+      { id: 1115, name: "Whisky White Horse (Cavalo Branco) 1L", category: "Destilados", price: 80.00, desc: "Garrafa 1L", image: "", available: true },
+      { id: 1116, name: "Combo Cavalo Branco + Vibe", category: "Combos", price: 100.00, desc: "1 Cavalo Branco 1L + Energético Vibe 2L + Gelo", image: "", available: true },
+      { id: 1117, name: "Combo Cavalo Branco + Red Bull", category: "Combos", price: 120.00, desc: "1 Cavalo Branco 1L + 4 Red Bull + Gelo", image: "", available: true },
+      { id: 1118, name: "Whisky Chanceler 1L", category: "Destilados", price: 20.00, desc: "Garrafa 1L", image: "", available: true },
+      { id: 1119, name: "Combo Chanceler + Energético 2L", category: "Combos", price: 40.00, desc: "1 Chanceler 1L + Energético 2L + Gelo", image: "", available: true },
+      { id: 1120, name: "Whisky Chivas Regal 12 Anos 1L", category: "Destilados", price: 170.00, desc: "Whisky Escocês Premium", image: "", available: true },
+      { id: 1121, name: "Combo Chivas Regal 12 Anos", category: "Combos", price: 210.00, desc: "1 Chivas Regal + 4 Red Bull + Gelo", image: "", available: true },
+      { id: 1122, name: "Whisky Gold Label Reserve 750ml", category: "Destilados", price: 300.00, desc: "Garrafa 750ml", image: "", available: true },
+      { id: 1123, name: "Combo Gold Label Reserve", category: "Combos", price: 350.00, desc: "1 Gold Label + 5 Red Bull + Gelo de Sabor", image: "", available: true },
+      { id: 1124, name: "Whisky Jack Daniel's N° 7 1L", category: "Destilados", price: 165.00, desc: "Tennessee Whiskey 1L", image: "", available: true },
+      { id: 1125, name: "Combo Jack Daniel's N° 7", category: "Combos", price: 210.00, desc: "1 Jack N° 7 + 4 Red Bull + Gelo de Coco", image: "", available: true },
+      { id: 1126, name: "Whisky Jack Daniel's Fire / Honey 1L", category: "Destilados", price: 175.00, desc: "Sabor Canela ou Mel", image: "", available: true },
+      { id: 1127, name: "Combo Jack Daniel's Fire / Honey", category: "Combos", price: 215.00, desc: "1 Jack Fire/Honey + 4 Red Bull + Gelo", image: "", available: true },
+      { id: 1128, name: "Whisky Jack Daniel's Apple 1L", category: "Destilados", price: 200.00, desc: "Sabor Maçã Verde", image: "", available: true },
+      { id: 1129, name: "Combo Jack Daniel's Apple", category: "Combos", price: 240.00, desc: "1 Jack Apple + 4 Red Bull + Gelo", image: "", available: true },
+      { id: 1130, name: "Whisky Old Parr 12 Anos 1L", category: "Destilados", price: 170.00, desc: "Grand Old Parr 12 Anos", image: "", available: true },
+      { id: 1131, name: "Combo Old Parr 12 Anos", category: "Combos", price: 210.00, desc: "1 Old Parr 12A + 4 Red Bull + Gelo de Coco", image: "", available: true },
+      { id: 1132, name: "Whisky Old Star", category: "Destilados", price: 20.00, desc: "Garrafa de Whisky Nacional", image: "", available: true },
+      { id: 1133, name: "Combo Old Star", category: "Combos", price: 40.00, desc: "1 Old Star + Energético 2L + Gelo", image: "", available: true },
+      { id: 1134, name: "Whisky Passport Scotch 1L", category: "Destilados", price: 55.00, desc: "Garrafa 1L", image: "", available: true },
+      { id: 1135, name: "Combo Passport + Vibe 2L", category: "Combos", price: 75.00, desc: "1 Passport 1L + Energético Vibe 2L + Gelo", image: "", available: true },
+      { id: 1136, name: "Combo Passport + Red Bull", category: "Combos", price: 105.00, desc: "1 Passport 1L + 4 Red Bull + Gelo", image: "", available: true },
+      { id: 1137, name: "Whisky Passport Maçã / Mel 670ml", category: "Destilados", price: 60.00, desc: "Saborizado Honey ou Green Apple", image: "", available: true },
+      { id: 1138, name: "Combo Passport Maçã/Mel + Vibe", category: "Combos", price: 75.00, desc: "1 Passport Sabores + Energético 2L + Gelo", image: "", available: true },
+      { id: 1139, name: "Combo Passport Maçã/Mel + Red Bull", category: "Combos", price: 105.00, desc: "1 Passport Sabores + 4 Red Bull + Gelo", image: "", available: true },
+      { id: 1140, name: "Whisky Red Label 1L", category: "Destilados", price: 100.00, desc: "Johnnie Walker Red Label 1L", image: "", available: true },
+      { id: 1141, name: "Combo Red Label + Vibe 2L", category: "Combos", price: 125.00, desc: "1 Red Label 1L + Energético Vibe 2L + Gelo", image: "", available: true },
+      { id: 1142, name: "Combo Red Label + Red Bull", category: "Combos", price: 150.00, desc: "1 Red Label 1L + 4 Red Bull + Gelo de Coco", image: "", available: true }
+    ];
+
+    let products = [];
+    let cart = [];
+    let pdvCart = [];
+    let orders = [];
+    let pdvSales = [];
+    let pdvPaymentMethod = 'Pix';
+    let activeCategory = 'Todos';
+    let currentImageBase64 = '';
+    let currentPin = '1234';
+    let selectedPeriod = 'today';
+    let isStoreOpenCurrently = false;
+    let filteredSalesForExport = [];
+    let activeTrackingRef = null;
+    let isAdminAuthenticated = false;
+
+    let calculatedKmDistance = 0;
+    let currentDeliveryCalculatedFee = 5.00;
+    let typingTimer = null;
+
+    // GERENCIAMENTO DE ÁUDIO
+    let audioCtx = null;
+    let alarmTimer = null;
+
+    function initAudioContext() {
+      if (!isAdminAuthenticated) return;
+      if (!audioCtx) {
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        if (AudioContext) audioCtx = new AudioContext();
+      }
+      if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+    }
+
+    function playNotificationSound() {
+      if (!isAdminAuthenticated) return;
+      initAudioContext();
+      if (!audioCtx) return;
+
+      try {
+        const now = audioCtx.currentTime;
+        const osc1 = audioCtx.createOscillator();
+        const gain1 = audioCtx.createGain();
+        osc1.type = 'sine';
+        osc1.frequency.setValueAtTime(587.33, now);
+        gain1.gain.setValueAtTime(0.3, now);
+        gain1.gain.exponentialRampToValueAtTime(0.001, now + 0.4);
+        osc1.connect(gain1);
+        gain1.connect(audioCtx.destination);
+        osc1.start(now);
+        osc1.stop(now + 0.4);
+
+        const osc2 = audioCtx.createOscillator();
+        const gain2 = audioCtx.createGain();
+        osc2.type = 'sine';
+        osc2.frequency.setValueAtTime(880.00, now + 0.15);
+        gain2.gain.setValueAtTime(0.3, now + 0.15);
+        gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.95);
+        osc2.connect(gain2);
+        gain2.connect(audioCtx.destination);
+        osc2.start(now + 0.15);
+        osc2.stop(now + 0.95);
+      } catch (e) {
+        console.error("Erro áudio:", e);
+      }
+    }
+
+    function updatePendingOrdersAlarm(hasPendingOrders) {
+      if (!isAdminAuthenticated) {
+        if (alarmTimer) { clearInterval(alarmTimer); alarmTimer = null; }
+        return;
+      }
+
+      if (hasPendingOrders) {
+        if (!alarmTimer) {
+          playNotificationSound();
+          alarmTimer = setInterval(() => { playNotificationSound(); }, 3000);
+        }
+      } else {
+        if (alarmTimer) { clearInterval(alarmTimer); alarmTimer = null; }
+      }
+    }
+
+    function authenticateAdmin() {
+      const pinInput = document.getElementById('admin-pin-input').value;
+      if(pinInput === currentPin) {
+        isAdminAuthenticated = true;
+        document.getElementById('admin-auth-modal').classList.add('hidden');
+        document.getElementById('admin-content').classList.remove('hidden');
+
+        initAudioContext();
+        const hasPending = orders.some(o => (o.status || 'Pendente') === 'Pendente');
+        updatePendingOrdersAlarm(hasPending);
+      } else {
+        alert('PIN Incorreto');
+      }
+    }
+
+    let storeSettings = {
+      mode: 'auto',
+      openTime: '12:00',
+      closeTime: '00:00',
+      pixKey: 'adegaalves@gmail.com',
+      deliveryFee: 5.00,
+      pricePerKm: 3.00
+    };
+
+    document.addEventListener('DOMContentLoaded', () => {
+      if (sessionStorage.getItem('age_verified') === 'true') {
+        document.getElementById('age-modal').classList.add('hidden');
+      } else {
+        document.getElementById('age-modal').classList.remove('hidden');
+      }
+
+      checkRoute();
+      window.addEventListener('hashchange', checkRoute);
+
+      db.ref('products').on('value', (snapshot) => {
+        const data = snapshot.val();
+        if (data) {
+          products = Object.keys(data).map(key => ({ ...data[key], firebaseKey: key }));
+        } else {
+          resetDefaultProducts();
+        }
+        renderCategoryFilters();
+        renderProducts();
+        renderAdminProducts();
+        renderPdvProducts();
+      });
+
+      db.ref('orders').on('value', (snapshot) => {
+        const data = snapshot.val();
+        orders = data ? Object.keys(data).map(key => ({ ...data[key], firebaseKey: key })).reverse() : [];
+        const hasPending = orders.some(o => (o.status || 'Pendente') === 'Pendente');
+        updatePendingOrdersAlarm(hasPending);
+
+        renderAdminOrders();
+        updateSalesMetrics();
+        updateMotoboyReport();
+      });
+
+      db.ref('pdv_sales').on('value', (snapshot) => {
+        const data = snapshot.val();
+        pdvSales = data ? Object.keys(data).map(key => ({ ...data[key], firebaseKey: key })).reverse() : [];
+        updateSalesMetrics();
+      });
+
+      db.ref('settings').on('value', (snapshot) => {
+        const data = snapshot.val();
+        if (data) {
+          storeSettings = { ...storeSettings, ...data };
+          if(data.pin) currentPin = data.pin;
+          
+          document.getElementById('config-pix-key').value = storeSettings.pixKey || '';
+          document.getElementById('config-delivery-fee').value = storeSettings.deliveryFee || 5.00;
+          document.getElementById('config-price-per-km').value = storeSettings.pricePerKm || 3.00;
+          document.getElementById('config-store-mode').value = storeSettings.mode || 'auto';
+          document.getElementById('config-open-time').value = storeSettings.openTime || '12:00';
+          document.getElementById('config-close-time').value = storeSettings.closeTime || '00:00';
+
+          updateStoreStatusUI();
+          toggleHoursInputs();
+          renderProducts();
+          renderCart();
+        }
+      });
+    });
+
+    // CÁLCULO DE DISTÂNCIA E FRETE USANDO A API DISTANCEMATRIX.AI
+    function handleAddressTyping() {
+      clearTimeout(typingTimer);
+      typingTimer = setTimeout(() => {
+        calculateDistanceMatrixRoute();
+      }, 1000);
+    }
+
+    async function calculateDistanceMatrixRoute(latLongDest = null) {
+      const addressInput = document.getElementById('checkout-address').value.trim();
+      const badge = document.getElementById('delivery-distance-badge');
+      const spinner = document.getElementById('km-loading-spinner');
+
+      if (!latLongDest && addressInput.length < 5) {
+        calculatedKmDistance = 0;
+        currentDeliveryCalculatedFee = parseFloat(storeSettings.deliveryFee) || 5.00;
+        badge.classList.add('hidden');
+        renderCart();
+        return;
+      }
+
+      spinner.classList.remove('hidden');
+
+      try {
+        const destinationParam = latLongDest ? latLongDest : `${addressInput}, Jandira, SP, Brasil`;
+        const url = `https://api.distancematrix.ai/maps/api/distancematrix/json?origins=${encodeURIComponent(STORE_ADDRESS_ORIGIN)}&destinations=${encodeURIComponent(destinationParam)}&key=${DISTANCE_MATRIX_API_KEY}`;
+
+        const response = await fetch(url);
+        const data = await response.json();
+
+        if (data.status === "OK" && data.rows && data.rows[0].elements && data.rows[0].elements[0].status === "OK") {
+          const element = data.rows[0].elements[0];
+          const distanceMeters = element.distance.value;
+          const distanceKm = distanceMeters / 1000;
+
+          calculatedKmDistance = parseFloat(distanceKm.toFixed(1));
+
+          const minFee = parseFloat(storeSettings.deliveryFee) || 5.00;
+          const pricePerKm = parseFloat(storeSettings.pricePerKm) || 3.00;
+
+          let calculatedFee = calculatedKmDistance * pricePerKm;
+          if (calculatedFee < minFee) calculatedFee = minFee;
+
+          currentDeliveryCalculatedFee = calculatedFee;
+
+          badge.innerText = `${calculatedKmDistance} km (${element.distance.text})`;
+          badge.classList.remove('hidden');
+        } else {
+          throw new Error("Endereço não localizado pela DistanceMatrix.AI");
+        }
+      } catch (err) {
+        console.warn("Cálculo por rota falhou, mantendo a taxa mínima padrão:", err);
+      } finally {
+        spinner.classList.add('hidden');
+        renderCart();
+      }
+    }
+
+    function getCurrentLocation() {
+      if (navigator.geolocation) {
+        document.getElementById('km-loading-spinner').classList.remove('hidden');
+        navigator.geolocation.getCurrentPosition((position) => {
+          const latLong = `${position.coords.latitude},${position.coords.longitude}`;
+          document.getElementById('checkout-address').value = `Localização exata via GPS`;
+          calculateDistanceMatrixRoute(latLong);
+        }, () => {
+          alert("Não foi possível acessar seu GPS.");
+          document.getElementById('km-loading-spinner').classList.add('hidden');
+        });
+      }
+    }
+
+    function resetDefaultProducts() {
+      db.ref('products').set(DEFAULT_PRODUCTS).then(() => {
+        alert("Todos os 115 produtos foram recarreagados com sucesso!");
+      });
+    }
+
+    function confirmAge() {
+      sessionStorage.setItem('age_verified', 'true');
+      document.getElementById('age-modal').classList.add('hidden');
+    }
+
+    function checkRoute() {
+      if(window.location.hash === '#admin') {
+        document.getElementById('view-cardapio').classList.add('hidden');
+        document.getElementById('cart-floating-btn').classList.add('hidden');
+        document.getElementById('view-admin').classList.remove('hidden');
+      } else {
+        document.getElementById('view-admin').classList.add('hidden');
+        document.getElementById('view-cardapio').classList.remove('hidden');
+        document.getElementById('cart-floating-btn').classList.remove('hidden');
+      }
+    }
+
+    function updateStoreStatusUI() {
+      const badge = document.getElementById('store-status-badge');
+      const dot = document.getElementById('store-status-dot');
+      const text = document.getElementById('store-status-text');
+
+      let isOpen = false;
+
+      if(storeSettings.mode === 'open') {
+        isOpen = true;
+      } else if(storeSettings.mode === 'closed') {
+        isOpen = false;
+      } else {
+        const now = new Date();
+        const dayOfWeek = now.getDay();
+        const isWorkingDay = dayOfWeek !== 1;
+
+        if (isWorkingDay) {
+          const currentMins = now.getHours() * 60 + now.getMinutes();
+          const [openH, openM] = (storeSettings.openTime || '12:00').split(':').map(Number);
+          const [closeH, closeM] = (storeSettings.closeTime || '00:00').split(':').map(Number);
+
+          const openMins = openH * 60 + openM;
+          let closeMins = closeH * 60 + closeM;
+          if (closeMins <= openMins) closeMins += 24 * 60;
+
+          isOpen = currentMins >= openMins && currentMins < closeMins;
+        } else {
+          isOpen = false;
+        }
+      }
+
+      isStoreOpenCurrently = isOpen;
+
+      if(isOpen) {
+        badge.className = "inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 mb-3";
+        dot.className = "w-2 h-2 rounded-full bg-emerald-500 animate-pulse";
+        text.innerText = `Aberto Agora (Ter-Dom ${storeSettings.openTime || '12:00'} às ${storeSettings.closeTime || '00:00'})`;
+      } else {
+        badge.className = "inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-rose-500/10 text-rose-400 border border-rose-500/20 mb-3";
+        dot.className = "w-2 h-2 rounded-full bg-rose-500";
+        text.innerText = "Fechado No Momento";
+      }
+
+      const submitBtn = document.getElementById('checkout-submit-btn');
+      if(submitBtn) {
+        if(!isOpen) {
+          submitBtn.disabled = true;
+          submitBtn.className = "w-full py-3 bg-neutral-800 text-neutral-500 font-bold rounded-xl cursor-not-allowed";
+          submitBtn.innerText = "Adega Fechada no Momento";
+        } else {
+          submitBtn.disabled = false;
+          submitBtn.className = "w-full py-3 bg-brand-600 hover:bg-brand-500 text-white font-bold rounded-xl shadow-lg shadow-brand-600/30 transition";
+          submitBtn.innerText = "Confirmar e Enviar Pedido";
+        }
+      }
+    }
+
+    function toggleHoursInputs() {
+      const mode = document.getElementById('config-store-mode').value;
+      document.getElementById('hours-container').classList.toggle('hidden', mode !== 'auto');
+    }
+
+    function saveStoreSettings() {
+      const deliveryFee = parseFloat(document.getElementById('config-delivery-fee').value) || 5.00;
+      const pricePerKm = parseFloat(document.getElementById('config-price-per-km').value) || 3.00;
+      const pixKey = document.getElementById('config-pix-key').value.trim();
+      const mode = document.getElementById('config-store-mode').value;
+      const openTime = document.getElementById('config-open-time').value;
+      const closeTime = document.getElementById('config-close-time').value;
+      
+      const newPin = document.getElementById('config-new-pin').value.trim();
+      const confirmPin = document.getElementById('config-confirm-pin').value.trim();
+
+      let pinToSave = currentPin;
+
+      if(newPin || confirmPin) {
+        if(newPin.length !== 4 || isNaN(newPin)) return alert('O novo PIN deve ter exatamente 4 dígitos numéricos.');
+        if(newPin !== confirmPin) return alert('A confirmação do novo PIN não confere.');
+        pinToSave = newPin;
+      }
+
+      const settingsData = { deliveryFee, pricePerKm, pixKey, mode, openTime, closeTime, pin: pinToSave };
+
+      db.ref('settings').set(settingsData).then(() => {
+        alert('Todas as configurações foram salvas com sucesso!');
+        document.getElementById('config-new-pin').value = '';
+        document.getElementById('config-confirm-pin').value = '';
+      });
+    }
+
+    function renderCategoryFilters() {
+      const container = document.getElementById('category-filters');
+      const baseCategories = ['Todos', 'Combos', 'Cervejas', 'Vinhos', 'Destilados', 'Cachaças', 'Tabacaria', 'Não Alcoólicos', 'Gelos & Energéticos'];
+      container.innerHTML = baseCategories.map(cat => `
+        <button onclick="setCategory('${cat}')" class="px-4 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition ${activeCategory === cat ? 'bg-brand-600 text-white' : 'bg-neutral-900 text-neutral-400 border border-neutral-800'}">
+          ${cat}
+        </button>
+      `).join('');
+    }
+
+    function setCategory(cat) {
+      activeCategory = cat;
+      renderCategoryFilters();
+      renderProducts();
+    }
+
+    function renderProducts() {
+      const grid = document.getElementById('products-grid');
+      const search = (document.getElementById('search-input')?.value || '').toLowerCase();
+      
+      const filtered = products.filter(p => {
+        const matchesCategory = activeCategory === 'Todos' || p.category === activeCategory;
+        const matchesSearch = p.name.toLowerCase().includes(search);
+        return matchesCategory && matchesSearch;
+      });
+
+      if(filtered.length === 0) {
+        grid.innerHTML = `<p class="col-span-full text-center text-neutral-500 py-12">Nenhum produto encontrado nesta categoria.</p>`;
+        return;
+      }
+
+      grid.innerHTML = filtered.map(p => `
+        <div class="bg-neutral-900 border border-neutral-800 rounded-2xl overflow-hidden flex flex-row sm:flex-col justify-between hover:border-neutral-700 transition group p-3 sm:p-0">
+          <div class="flex flex-row sm:flex-col items-center sm:items-stretch flex-1 gap-3 sm:gap-0 min-w-0">
+            ${p.image ? `
+              <div class="w-20 h-20 sm:w-full sm:h-44 flex-shrink-0 rounded-xl sm:rounded-none overflow-hidden relative">
+                <img src="${p.image}" alt="${p.name}" class="w-full h-full object-cover group-hover:scale-105 transition duration-300">
+              </div>
+            ` : `
+              <div class="w-20 h-20 sm:w-full sm:h-32 flex-shrink-0 bg-neutral-950 rounded-xl sm:rounded-none flex flex-col items-center justify-center text-neutral-700 border border-neutral-800/50 sm:border-b">
+                <i class="fa-solid fa-wine-bottle text-2xl sm:text-3xl mb-0.5"></i>
+                <span class="text-[9px] sm:text-[10px] uppercase tracking-wider">Alves Adega</span>
+              </div>
+            `}
+            
+            <div class="sm:p-4 flex-1 min-w-0">
+              <span class="text-[9px] sm:text-[10px] font-bold text-brand-500 uppercase tracking-wider block">${p.category}</span>
+              <h3 class="font-bold text-white text-sm sm:text-base leading-snug mt-0.5 truncate sm:whitespace-normal">${p.name}</h3>
+              <p class="text-neutral-400 text-xs mt-0.5 sm:mt-1 line-clamp-1 sm:line-clamp-2">${p.desc || ''}</p>
+              <div class="sm:hidden font-black text-emerald-400 text-base mt-1">R$ ${parseFloat(p.price).toFixed(2)}</div>
+            </div>
+          </div>
+
+          <div class="flex flex-col sm:flex-row items-end sm:items-center justify-between sm:p-4 sm:pt-0 pl-2 sm:pl-4 flex-shrink-0">
+            <span class="hidden sm:inline text-lg font-black text-white">R$ ${parseFloat(p.price).toFixed(2)}</span>
+            ${isStoreOpenCurrently ? `
+              <button onclick="addToCart(${p.id})" class="px-3 py-2 sm:px-3.5 rounded-xl bg-brand-600 hover:bg-brand-500 text-white font-semibold text-xs transition flex items-center gap-1">
+                <i class="fa-solid fa-plus"></i> <span class="hidden sm:inline">Adicionar</span>
+              </button>
+            ` : `
+              <button disabled class="px-3 py-2 sm:px-3.5 rounded-xl bg-neutral-800 text-neutral-500 font-semibold text-xs cursor-not-allowed">
+                Fechado
+              </button>
+            `}
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function filterProducts() { renderProducts(); }
+
+    function addToCart(id) {
+      if(!isStoreOpenCurrently) return alert("A Alves Adega está fechada no momento.");
+      const product = products.find(p => p.id === id);
+      if(!product) return;
+      const existing = cart.find(item => item.id === id);
+      if(existing) existing.qty++;
+      else cart.push({ ...product, qty: 1 });
+      renderCart();
+    }
+
+    function renderCart() {
+      const container = document.getElementById('cart-items-container');
+      const totalItems = cart.reduce((acc, item) => acc + item.qty, 0);
+      const subtotal = cart.reduce((acc, item) => acc + (item.price * item.qty), 0);
+      const deliveryFee = currentDeliveryCalculatedFee;
+      const total = subtotal > 0 ? (subtotal + deliveryFee) : 0;
+
+      document.getElementById('cart-count').innerText = totalItems;
+      document.getElementById('cart-total-badge').innerText = `R$ ${total.toFixed(2)}`;
+      document.getElementById('cart-subtotal').innerText = `R$ ${subtotal.toFixed(2)}`;
+      document.getElementById('cart-delivery-fee').innerText = `R$ ${deliveryFee.toFixed(2)}`;
+      document.getElementById('cart-final-total').innerText = `R$ ${total.toFixed(2)}`;
+
+      if(cart.length === 0) {
+        container.innerHTML = `
+          <div class="text-center py-12 text-neutral-500 space-y-2">
+            <i class="fa-solid fa-basket-shopping text-3xl"></i>
+            <p class="text-xs">Seu carrinho está vazio</p>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = cart.map(item => `
+        <div class="flex items-center justify-between bg-neutral-950 p-3 rounded-xl border border-neutral-800">
+          <div class="flex-1 pr-2">
+            <h4 class="text-xs font-bold text-white">${item.name}</h4>
+            <span class="text-xs text-brand-500 font-semibold">R$ ${(item.price * item.qty).toFixed(2)}</span>
+          </div>
+          <div class="flex items-center gap-2 bg-neutral-900 border border-neutral-800 rounded-lg px-2 py-1">
+            <button onclick="changeCartQty(${item.id}, -1)" class="text-neutral-400 hover:text-white text-xs px-1">-</button>
+            <span class="text-xs font-bold text-white px-1">${item.qty}</span>
+            <button onclick="changeCartQty(${item.id}, 1)" class="text-neutral-400 hover:text-white text-xs px-1">+</button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function changeCartQty(id, delta) {
+      const item = cart.find(i => i.id === id);
+      if(!item) return;
+      item.qty += delta;
+      if(item.qty <= 0) cart = cart.filter(i => i.id !== id);
+      renderCart();
+    }
+
+    function toggleCartModal(open) {
+      document.getElementById('cart-modal').classList.toggle('hidden', !open);
+    }
+
+    function toggleChangeInput() {
+      const payment = document.getElementById('checkout-payment').value;
+      const changeInput = document.getElementById('checkout-change');
+      changeInput.classList.toggle('hidden', payment !== 'Dinheiro');
+    }
+
+    function submitOrder() {
+      if(!isStoreOpenCurrently) return alert("Desculpe, a Alves Adega está fechada no momento.");
+      if (cart.length === 0) return alert('Seu carrinho está vazio!');
+
+      const name = document.getElementById('checkout-name').value.trim();
+      const phone = document.getElementById('checkout-phone').value.trim();
+      const address = document.getElementById('checkout-address').value.trim();
+      const payment = document.getElementById('checkout-payment').value;
+      const change = document.getElementById('checkout-change').value.trim();
+
+      if (!name || !phone || !address) return alert('Por favor, preencha seu nome, telefone e endereço.');
+
+      const subtotal = cart.reduce((acc, item) => acc + (item.price * item.qty), 0);
+      const deliveryFee = currentDeliveryCalculatedFee;
+      const total = subtotal + deliveryFee;
+      const orderId = Date.now();
+
+      const orderData = {
+        id: orderId,
+        customer: { name, phone, address },
+        items: cart,
+        payment,
+        change: payment === 'Dinheiro' ? change : '',
+        subtotal,
+        deliveryFee,
+        distanceKm: calculatedKmDistance,
+        total,
+        status: 'Pendente',
+        createdAt: firebase.database.ServerValue.TIMESTAMP
+      };
+
+      db.ref('orders').push(orderData).then(() => {
+        cart = [];
+        document.getElementById('checkout-name').value = '';
+        document.getElementById('checkout-phone').value = '';
+        document.getElementById('checkout-address').value = '';
+        document.getElementById('checkout-change').value = '';
+        renderCart();
+        toggleCartModal(false);
+
+        localStorage.setItem('alves_last_order_id', orderId);
+        document.getElementById('track-search-input').value = orderId.toString().slice(-4);
+
+        alert('🎉 Seu pedido foi enviado com sucesso!');
+        openTrackingModal();
+      });
+    }
+
+    function openTrackingModal() {
+      document.getElementById('tracking-modal').classList.remove('hidden');
+      const lastId = localStorage.getItem('alves_last_order_id');
+      if (lastId) {
+        document.getElementById('track-search-input').value = lastId.toString().slice(-4);
+        searchAndTrackOrder();
+      }
+    }
+
+    function closeTrackingModal() {
+      document.getElementById('tracking-modal').classList.add('hidden');
+      if (activeTrackingRef) {
+        activeTrackingRef.off();
+        activeTrackingRef = null;
+      }
+    }
+
+    function searchAndTrackOrder() {
+      const term = document.getElementById('track-search-input').value.trim();
+      if (!term) return alert('Por favor, insira o ID ou o Telefone do pedido.');
+
+      if (activeTrackingRef) { activeTrackingRef.off(); activeTrackingRef = null; }
+
+      activeTrackingRef = db.ref('orders');
+      activeTrackingRef.on('value', (snapshot) => {
+        const data = snapshot.val();
+        if (!data) return showTrackingEmpty("Nenhum pedido ativo encontrado.");
+
+        const allOrders = Object.keys(data).map(k => ({ ...data[k], firebaseKey: k }));
+        const found = allOrders.find(o => {
+          const idStr = (o.id || '').toString();
+          const cleanPhone = (o.customer?.phone || '').replace(/\D/g, '');
+          const cleanTerm = term.replace(/\D/g, '');
+          return idStr.endsWith(term) || idStr === term || (cleanTerm && cleanPhone.includes(cleanTerm));
+        });
+
+        if (!found) return showTrackingEmpty("Pedido não localizado ou já encerrado.");
+        if (found.status === 'Concluído') {
+          localStorage.removeItem('alves_last_order_id');
+          return showTrackingEmpty(`🎉 O pedido #${(found.id || '').toString().slice(-4)} foi ENTREGUE E CONCLUÍDO!`);
+        }
+
+        renderTimeline(found);
+      });
+    }
+
+    function showTrackingEmpty(msg) {
+      document.getElementById('tracking-content').classList.add('hidden');
+      document.getElementById('tracking-empty').classList.remove('hidden');
+      document.getElementById('tracking-empty-text').innerText = msg;
+    }
+
+    function renderTimeline(order) {
+      document.getElementById('tracking-empty').classList.add('hidden');
+      document.getElementById('tracking-content').classList.remove('hidden');
+
+      const shortId = (order.id || '').toString().slice(-4);
+      document.getElementById('track-order-id').innerText = `#${shortId}`;
+      document.getElementById('track-order-total').innerText = `R$ ${parseFloat(order.total || 0).toFixed(2)}`;
+
+      const statusBanner = document.getElementById('track-status-banner');
+      const status = order.status || 'Pendente';
+
+      const waMsg = encodeURIComponent(`Olá Alves Adega! Gostaria de informações sobre meu Pedido #${shortId}`);
+      document.getElementById('track-whatsapp-link').href = `https://wa.me/${STORE_WHATSAPP_NUMBER}?text=${waMsg}`;
+
+      const resetStep = (id) => {
+        document.getElementById(`step-dot-${id}`).className = "absolute -left-[31px] top-0.5 w-6 h-6 rounded-full bg-neutral-800 border-2 border-neutral-700 flex items-center justify-center text-[10px] text-neutral-500";
+        document.getElementById(`step-title-${id}`).className = "text-xs font-bold text-neutral-500";
+      };
+
+      const setStepActive = (id, colorClass, borderClass) => {
+        document.getElementById(`step-dot-${id}`).className = `absolute -left-[31px] top-0.5 w-6 h-6 rounded-full ${colorClass} ${borderClass} flex items-center justify-center text-[10px] text-white shadow-lg animate-pulse`;
+        document.getElementById(`step-title-${id}`).className = "text-xs font-bold text-white";
+      };
+
+      const setStepDone = (id) => {
+        document.getElementById(`step-dot-${id}`).className = "absolute -left-[31px] top-0.5 w-6 h-6 rounded-full bg-emerald-600 border-2 border-emerald-400 flex items-center justify-center text-[10px] text-white";
+        document.getElementById(`step-title-${id}`).className = "text-xs font-bold text-emerald-400";
+      };
+
+      resetStep('pendente'); resetStep('preparo'); resetStep('rota');
+
+      if (status === 'Pendente') {
+        statusBanner.className = "p-3 rounded-xl border border-amber-500/30 bg-amber-500/10 text-amber-400 text-center text-xs font-bold";
+        statusBanner.innerText = "🟡 Pedido Recebido! Aguardando a loja iniciar o preparo.";
+        setStepActive('pendente', 'bg-amber-500', 'border-amber-300');
+      } else if (status === 'Em Preparo') {
+        statusBanner.className = "p-3 rounded-xl border border-blue-500/30 bg-blue-500/10 text-blue-400 text-center text-xs font-bold";
+        statusBanner.innerText = "🔵 Seu pedido está sendo separado e preparado com carinho!";
+        setStepDone('pendente'); setStepActive('preparo', 'bg-blue-600', 'border-blue-400');
+      } else if (status === 'Em Rota') {
+        statusBanner.className = "p-3 rounded-xl border border-purple-500/30 bg-purple-500/10 text-purple-400 text-center text-xs font-bold";
+        statusBanner.innerText = "🟣 O entregador já está a caminho do seu endereço!";
+        setStepDone('pendente'); setStepDone('preparo'); setStepActive('rota', 'bg-purple-600', 'border-purple-400');
+      }
+    }
+
+    function adminSearchOrder() {
+      const term = document.getElementById('admin-search-order-input').value.trim().toLowerCase();
+      const container = document.getElementById('admin-search-results');
+
+      if (!term) return container.innerHTML = `<p class="text-center text-neutral-500 text-xs py-4">Digite o ID ou Nome para buscar.</p>`;
+
+      const results = orders.filter(o => {
+        const idStr = (o.id || '').toString().toLowerCase();
+        const shortId = idStr.slice(-4);
+        const nameStr = (o.customer?.name || '').toLowerCase();
+        const phoneStr = (o.customer?.phone || '').toLowerCase();
+        return idStr.includes(term) || shortId.includes(term) || nameStr.includes(term) || phoneStr.includes(term);
+      });
+
+      if (results.length === 0) return container.innerHTML = `<p class="text-center text-rose-400 font-bold text-xs py-4">Nenhum pedido encontrado com "${term}".</p>`;
+
+      container.innerHTML = results.map(order => {
+        const isPending = (order.status || 'Pendente') === 'Pendente';
+        return `
+        <div class="border p-4 rounded-xl space-y-3 text-xs transition ${isPending ? 'bg-rose-950/60 border-rose-600 shadow-lg shadow-rose-950/50 animate-pulse' : 'bg-neutral-950 border-neutral-800'}">
+          <div class="flex justify-between items-start border-b border-neutral-800 pb-2">
+            <div>
+              <span class="font-bold text-brand-500 text-sm">#${(order.id || Date.now()).toString().slice(-4)}</span>
+              <h4 class="font-bold text-white text-base mt-0.5">${order.customer?.name || 'Cliente'}</h4>
+              <p class="text-neutral-400 text-xs">${order.customer?.address || 'Sem endereço'}</p>
+            </div>
+            <span class="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase ${isPending ? 'bg-rose-500 text-white' : 'bg-emerald-500/10 text-emerald-400'}">${order.status || 'Pendente'}</span>
+          </div>
+
+          <div class="space-y-1 bg-neutral-900/50 p-2.5 rounded-lg border border-neutral-800/80">
+            ${(order.items || []).map(i => `<div class="flex justify-between text-neutral-300"><span>${i.qty}x ${i.name}</span><span>R$ ${(i.price * i.qty).toFixed(2)}</span></div>`).join('')}
+          </div>
+
+          <div class="flex justify-between items-center font-bold text-sm bg-neutral-900 p-2.5 rounded-lg border border-neutral-800">
+            <span class="text-neutral-400 text-xs">Pagamento: <strong class="text-white">${order.payment || 'Pix'}</strong></span>
+            <span class="text-emerald-400">Total: R$ ${(order.total || 0).toFixed(2)}</span>
+          </div>
+
+          <div class="flex items-center gap-2 pt-1">
+            <button onclick="printReceipt('Delivery', '${order.firebaseKey}')" class="flex-1 py-2 rounded-xl bg-neutral-900 hover:bg-neutral-800 text-amber-400 border border-neutral-800 font-semibold text-xs flex items-center justify-center gap-1.5 transition">
+              <i class="fa-solid fa-print"></i> Imprimir Comanda
+            </button>
+            <a href="https://wa.me/55${(order.customer?.phone || '').replace(/\D/g, '')}" target="_blank" class="flex-1 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs flex items-center justify-center gap-1.5 transition">
+              <i class="fa-brands fa-whatsapp"></i> Chamar no Zap
+            </a>
+          </div>
+        </div>
+      `}).join('');
+    }
+
+    function setAdminTab(tab) {
+      document.getElementById('admin-tab-pedidos').classList.toggle('hidden', tab !== 'pedidos');
+      document.getElementById('admin-tab-motoboy').classList.toggle('hidden', tab !== 'motoboy');
+      document.getElementById('admin-tab-buscar').classList.toggle('hidden', tab !== 'buscar');
+      document.getElementById('admin-tab-pdv').classList.toggle('hidden', tab !== 'pdv');
+      document.getElementById('admin-tab-vendas').classList.toggle('hidden', tab !== 'vendas');
+      document.getElementById('admin-tab-produtos').classList.toggle('hidden', tab !== 'produtos');
+      document.getElementById('admin-tab-config').classList.toggle('hidden', tab !== 'config');
+      
+      const btns = ['pedidos', 'motoboy', 'buscar', 'pdv', 'vendas', 'produtos', 'config'];
+      btns.forEach(b => {
+        const btn = document.getElementById(`tab-${b}-btn`);
+        if(btn) {
+          if(b === tab) {
+            btn.classList.add('border-brand-500', 'text-white');
+            btn.classList.remove('border-transparent', 'text-neutral-400');
+          } else {
+            btn.classList.remove('border-brand-500', 'text-white');
+            btn.classList.add('border-transparent', 'text-neutral-400');
+          }
+        }
+      });
+    }
+
+    function updateOrderStatus(orderKey, newStatus) {
+      db.ref(`orders/${orderKey}`).update({ status: newStatus });
+    }
+
+    function printReceipt(type, firebaseKey) {
+      const order = type === 'Delivery' ? orders.find(o => o.firebaseKey === firebaseKey) : pdvSales.find(s => s.firebaseKey === firebaseKey);
+      if (!order) return alert('Pedido não encontrado para impressão.');
+
+      const printArea = document.getElementById('printable-receipt');
+      const orderId = (order.id || Date.now()).toString().slice(-4);
+      const dateStr = order.createdAt ? new Date(order.createdAt).toLocaleString('pt-BR') : new Date().toLocaleString('pt-BR');
+
+      let itemsHtml = (order.items || []).map(i => `
+        <div style="display: flex; justify-content: space-between; margin-bottom: 3px;">
+          <span>${i.qty}x ${i.name}</span>
+          <span>R$ ${(i.price * i.qty).toFixed(2)}</span>
+        </div>
+      `).join('');
+
+      printArea.innerHTML = `
+        <div style="text-align: center; margin-bottom: 8px; border-bottom: 1px dashed #000; padding-bottom: 6px;">
+          <h2 style="font-size: 16px; margin: 0; font-weight: bold;">ALVES ADEGA</h2>
+          <p style="font-size: 10px; margin: 2px 0;">Jandira - SP</p>
+          <p style="font-size: 11px; margin: 2px 0;"><strong>COMANDA DE ${type.toUpperCase()} #${orderId}</strong></p>
+          <p style="font-size: 9px; margin: 0;">Data: ${dateStr}</p>
+        </div>
+
+        <div style="margin-bottom: 8px; border-bottom: 1px dashed #000; padding-bottom: 6px;">
+          <strong>CLIENTE:</strong> ${order.customer?.name || order.clientName || 'Cliente'}<br>
+          ${order.customer?.address ? `<strong>ENDEREÇO:</strong> ${order.customer.address}<br>` : ''}
+          ${order.distanceKm ? `<strong>DISTÂNCIA:</strong> ${order.distanceKm} km` : ''}
+        </div>
+
+        <div style="border-bottom: 1px dashed #000; padding-bottom: 6px; margin-bottom: 6px;">
+          <strong>ITENS DO PEDIDO:</strong>
+          <div style="margin-top: 4px; font-size: 11px;">${itemsHtml}</div>
+        </div>
+
+        <div style="font-size: 11px; margin-bottom: 8px;">
+          <div style="display: flex; justify-content: space-between; font-weight: bold; font-size: 13px;">
+            <span>TOTAL:</span>
+            <span>R$ ${(order.total || 0).toFixed(2)}</span>
+          </div>
+          <div style="margin-top: 4px;"><strong>PAGAMENTO:</strong> ${order.payment || 'Pix'}</div>
+        </div>
+      `;
+
+      printArea.classList.remove('hidden');
+      window.print();
+      printArea.classList.add('hidden');
+    }
+
+    function renderAdminOrders() {
+      document.getElementById('orders-badge').innerText = orders.length;
+
+      const pendentes = orders.filter(o => (o.status || 'Pendente') === 'Pendente');
+      const preparo = orders.filter(o => o.status === 'Em Preparo');
+      const rota = orders.filter(o => o.status === 'Em Rota');
+      const concluidos = orders.filter(o => o.status === 'Concluído');
+
+      document.getElementById('badge-count-pendente').innerText = pendentes.length;
+      document.getElementById('badge-count-preparo').innerText = preparo.length;
+      document.getElementById('badge-count-rota').innerText = rota.length;
+      document.getElementById('badge-count-concluido').innerText = concluidos.length;
+
+      const createCard = (order) => {
+        const isPending = (order.status || 'Pendente') === 'Pendente';
+        return `
+        <div class="p-3 rounded-xl space-y-2 text-xs border transition ${isPending ? 'bg-rose-950/70 border-rose-500 shadow-lg shadow-rose-950/80 animate-pulse' : 'bg-neutral-950 border-neutral-800'}">
+          <div class="flex justify-between items-start border-b border-neutral-800 pb-1.5">
+            <div>
+              <span class="font-bold text-brand-500 text-[11px]">#${(order.id || Date.now()).toString().slice(-4)}</span>
+              <h4 class="font-bold text-white leading-tight mt-0.5">${order.customer?.name || 'Cliente'}</h4>
+              <p class="text-[11px] text-neutral-400 mt-0.5">${order.customer?.address || 'Sem endereço'}</p>
+              ${order.distanceKm ? `<p class="text-[10px] text-amber-400 mt-0.5"><i class="fa-solid fa-route"></i> ${order.distanceKm} km</p>` : ''}
+            </div>
+          </div>
+
+          <div class="space-y-1 text-[11px]">
+            ${(order.items || []).map(i => `<div class="flex justify-between text-neutral-300"><span>${i.qty}x ${i.name}</span><span>R$ ${(i.price * i.qty).toFixed(2)}</span></div>`).join('')}
+          </div>
+
+          <div class="flex justify-between items-center border-t border-neutral-800 pt-1.5 font-bold">
+            <span class="text-neutral-400 text-[10px]">${order.payment || 'Pix'}</span>
+            <span class="text-emerald-400">R$ ${(order.total || 0).toFixed(2)}</span>
+          </div>
+
+          <div class="grid grid-cols-2 gap-1 pt-1 border-t border-neutral-800/60 text-[10px]">
+            ${order.status !== 'Pendente' ? `<button onclick="updateOrderStatus('${order.firebaseKey}', 'Pendente')" class="py-1 rounded bg-neutral-900 text-amber-400 border border-neutral-800">🟡 Pendente</button>` : ''}
+            ${order.status !== 'Em Preparo' ? `<button onclick="updateOrderStatus('${order.firebaseKey}', 'Em Preparo')" class="py-1 rounded bg-neutral-900 text-blue-400 border border-neutral-800">🔵 Preparo</button>` : ''}
+            ${order.status !== 'Em Rota' ? `<button onclick="updateOrderStatus('${order.firebaseKey}', 'Em Rota')" class="py-1 rounded bg-neutral-900 text-purple-400 border border-neutral-800">🟣 Rota</button>` : ''}
+            ${order.status !== 'Concluído' ? `<button onclick="updateOrderStatus('${order.firebaseKey}', 'Concluído')" class="py-1 rounded bg-neutral-900 text-emerald-400 border border-neutral-800">🟢 Concluir</button>` : ''}
+          </div>
+        </div>
+      `;
+      };
+
+      document.getElementById('orders-column-pendente').innerHTML = pendentes.length ? pendentes.map(createCard).join('') : '<p class="text-neutral-600 text-[11px] text-center py-4">Nenhum pedido</p>';
+      document.getElementById('orders-column-preparo').innerHTML = preparo.length ? preparo.map(createCard).join('') : '<p class="text-neutral-600 text-[11px] text-center py-4">Nenhum pedido</p>';
+      document.getElementById('orders-column-rota').innerHTML = rota.length ? rota.map(createCard).join('') : '<p class="text-neutral-600 text-[11px] text-center py-4">Nenhum pedido</p>';
+      document.getElementById('orders-column-concluido').innerHTML = concluidos.length ? concluidos.map(createCard).join('') : '<p class="text-neutral-600 text-[11px] text-center py-4">Nenhum pedido</p>';
+    }
+
+    function updateMotoboyReport() {
+      const table = document.getElementById('motoboy-report-table');
+      if(!table) return;
+
+      const totalFee = orders.reduce((acc, o) => acc + (parseFloat(o.deliveryFee) || 0), 0);
+      const totalDeliveries = orders.length;
+      const avgFee = totalDeliveries > 0 ? totalFee / totalDeliveries : 0;
+
+      document.getElementById('metric-motoboy-total').innerText = `R$ ${totalFee.toFixed(2)}`;
+      document.getElementById('metric-motoboy-count').innerText = totalDeliveries;
+      document.getElementById('metric-motoboy-avg').innerText = `R$ ${avgFee.toFixed(2)}`;
+
+      if (orders.length === 0) return table.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-neutral-500">Nenhuma entrega registrada.</td></tr>`;
+
+      table.innerHTML = orders.map(o => `
+        <tr class="hover:bg-neutral-950/50 transition">
+          <td class="p-3 font-bold text-brand-500">#${(o.id || Date.now()).toString().slice(-4)}</td>
+          <td class="p-3">
+            <div class="font-semibold text-white">${o.customer?.name || 'Cliente'}</div>
+            <div class="text-[10px] text-neutral-400">${o.customer?.address || 'Sem endereço'}</div>
+          </td>
+          <td class="p-3 text-amber-400 font-semibold">${o.distanceKm ? `${o.distanceKm} km` : '-'}</td>
+          <td class="p-3">
+            <span class="px-2 py-0.5 rounded text-[10px] font-bold ${o.status === 'Concluído' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-amber-500/10 text-amber-400 border border-amber-500/20'}">${o.status || 'Pendente'}</span>
+          </td>
+          <td class="p-3 font-black text-amber-400 text-sm">R$ ${parseFloat(o.deliveryFee || 0).toFixed(2)}</td>
+          <td class="p-3 text-right text-neutral-500">${o.createdAt ? new Date(o.createdAt).toLocaleString([], {day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit'}) : ''}</td>
+        </tr>
+      `).join('');
+    }
+
+    function generateMotoboyPDF(motoboyOrders) {
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF();
+      const todayStr = new Date().toLocaleDateString('pt-BR');
+
+      doc.setFontSize(18);
+      doc.setTextColor(229, 9, 20);
+      doc.text("ALVES ADEGA - FECHAMENTO DE TAXAS MOTOBOY", 14, 20);
+
+      doc.setFontSize(10);
+      doc.setTextColor(100);
+      doc.text(`Unidade Jandira - SP • Relatório de Corridas do Motoboy`, 14, 26);
+      doc.text(`Data do Fechamento: ${new Date().toLocaleString('pt-BR')}`, 14, 31);
+
+      const totalFee = motoboyOrders.reduce((acc, o) => acc + (parseFloat(o.deliveryFee) || 0), 0);
+      const totalDeliveries = motoboyOrders.length;
+      const avgFee = totalDeliveries > 0 ? totalFee / totalDeliveries : 0;
+
+      doc.setFillColor(245, 245, 245);
+      doc.rect(14, 36, 182, 18, "F");
+
+      doc.setFontSize(10);
+      doc.setTextColor(0);
+      doc.setFont("helvetica", "bold");
+      doc.text(`Total a Pagar Motoboy: R$ ${totalFee.toFixed(2)}`, 18, 43);
+      doc.text(`Entregas: ${totalDeliveries}`, 95, 43);
+      doc.text(`Média/Corrida: R$ ${avgFee.toFixed(2)}`, 150, 43);
+
+      const tableRows = motoboyOrders.map(o => [
+        `#${(o.id || Date.now()).toString().slice(-4)}`,
+        `${o.customer?.name || 'Cliente'} - ${o.customer?.address || ''}`,
+        o.distanceKm ? `${o.distanceKm} km` : '-',
+        o.status || 'Pendente',
+        `R$ ${parseFloat(o.deliveryFee || 0).toFixed(2)}`,
+        o.createdAt ? new Date(o.createdAt).toLocaleString('pt-BR') : ''
+      ]);
+
+      doc.autoTable({
+        startY: 58,
+        head: [['ID Pedido', 'Cliente / Endereço', 'Distância', 'Status', 'Taxa (R$)', 'Data / Hora']],
+        body: tableRows,
+        headStyles: { fillColor: [229, 9, 20] },
+        styles: { fontSize: 8 }
+      });
+
+      doc.save(`Fechamento_Motoboy_Alves_Adega_${todayStr.replace(/\//g, '-')}.pdf`);
+    }
+
+    function closeMotoboyCashAndReset() {
+      if (orders.length === 0) return alert("Não há entregas registradas para o motoboy no momento.");
+      if (confirm("⚠️ ATENÇÃO: Ao confirmar, o sistema irá GERAR UM RELATÓRIO PDF das taxas e ZERAR O HISTÓRICO DE ENTREGAS.\n\nDeseja continuar?")) {
+        generateMotoboyPDF(orders);
+        db.ref('orders').remove().then(() => alert("✅ Fechamento do motoboy concluído com sucesso!"));
+      }
+    }
+
+    function setReportPeriod(period) {
+      selectedPeriod = period;
+      document.querySelectorAll('.period-btn').forEach(btn => {
+        btn.className = "period-btn px-3 py-1.5 rounded-xl font-bold bg-neutral-950 text-neutral-400 border border-neutral-800 hover:text-white transition";
+      });
+      const activeBtn = document.getElementById(`period-btn-${period}`);
+      if(activeBtn) activeBtn.className = "period-btn px-3 py-1.5 rounded-xl font-bold bg-brand-600 text-white border border-brand-500 transition";
+      document.getElementById('custom-date-container').classList.toggle('hidden', period !== 'custom');
+      updateSalesMetrics();
+    }
+
+    function updateSalesMetrics() {
+      const completedDelivery = orders.filter(o => o.status === 'Concluído').map(o => ({
+        type: 'Delivery', firebaseKey: o.firebaseKey, id: `#${(o.id || Date.now()).toString().slice(-4)}`,
+        customer: o.customer?.name || 'Cliente Delivery', payment: o.payment || 'Pix', total: parseFloat(o.total) || 0, createdAt: o.createdAt || Date.now()
+      }));
+
+      const formattedPdvSales = pdvSales.map(s => ({
+        type: 'Balcão', firebaseKey: s.firebaseKey, id: `#${(s.id || Date.now()).toString().slice(-4)}`,
+        customer: s.clientName || 'Cliente Balcão', payment: s.payment || 'Dinheiro', total: parseFloat(s.total) || 0, createdAt: s.createdAt || Date.now()
+      }));
+
+      let allSales = [...completedDelivery, ...formattedPdvSales];
+      const originFilter = document.getElementById('filter-origin')?.value || 'all';
+      if(originFilter !== 'all') allSales = allSales.filter(s => s.type === originFilter);
+
+      const now = new Date();
+      if (selectedPeriod === 'today') {
+        const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+        allSales = allSales.filter(s => s.createdAt >= startOfDay);
+      }
+
+      allSales.sort((a, b) => b.createdAt - a.createdAt);
+      filteredSalesForExport = allSales;
+
+      const totalRevenue = allSales.reduce((acc, sale) => acc + sale.total, 0);
+      const totalCount = allSales.length;
+      const avgTicket = totalCount > 0 ? totalRevenue / totalCount : 0;
+
+      document.getElementById('metric-sales-total').innerText = `R$ ${totalRevenue.toFixed(2)}`;
+      document.getElementById('metric-sales-count').innerText = totalCount;
+      document.getElementById('metric-sales-avg').innerText = `R$ ${avgTicket.toFixed(2)}`;
+
+      const reportTable = document.getElementById('sales-report-table');
+      if (reportTable) {
+        if (allSales.length === 0) {
+          reportTable.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-neutral-500">Nenhuma venda registrada.</td></tr>`;
+        } else {
+          reportTable.innerHTML = allSales.map(s => `
+            <tr class="hover:bg-neutral-950/50 transition">
+              <td class="p-3 font-bold"><span class="${s.type === 'Delivery' ? 'text-brand-500' : 'text-emerald-400'}">[${s.type}]</span> ${s.id}</td>
+              <td class="p-3 text-white">${s.customer}</td>
+              <td class="p-3">${s.payment}</td>
+              <td class="p-3 font-bold text-emerald-400">R$ ${s.total.toFixed(2)}</td>
+              <td class="p-3 text-right text-neutral-500">${s.createdAt ? new Date(s.createdAt).toLocaleString([], {day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit'}) : ''}</td>
+            </tr>
+          `).join('');
+        }
+      }
+    }
+
+    function generateSalesPDF(salesList) {
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF();
+      const todayStr = new Date().toLocaleDateString('pt-BR');
+
+      doc.setFontSize(18);
+      doc.setTextColor(229, 9, 20);
+      doc.text("ALVES ADEGA - FECHAMENTO DE CAIXA", 14, 20);
+
+      const totalRevenue = salesList.reduce((acc, s) => acc + s.total, 0);
+      const totalSales = salesList.length;
+
+      doc.setFontSize(10);
+      doc.setTextColor(0);
+      doc.text(`Faturamento Total: R$ ${totalRevenue.toFixed(2)} | Vendas: ${totalSales}`, 14, 30);
+
+      const tableRows = salesList.map(s => [`[${s.type}] ${s.id}`, s.customer, s.payment, `R$ ${s.total.toFixed(2)}`, s.createdAt ? new Date(s.createdAt).toLocaleString('pt-BR') : '']);
+
+      doc.autoTable({ startY: 40, head: [['ID', 'Cliente', 'Pagamento', 'Total', 'Data/Hora']], body: tableRows, headStyles: { fillColor: [229, 9, 20] } });
+      doc.save(`Relatorio_Vendas_Alves_Adega_${todayStr.replace(/\//g, '-')}.pdf`);
+    }
+
+    function closeCashAndResetSales() {
+      if (filteredSalesForExport.length === 0) return alert("Não há vendas registradas no momento.");
+      if (confirm("⚠️ ATENÇÃO: Ao confirmar, o sistema irá GERAR UM ARQUIVO PDF e ZERAR TODO O HISTÓRICO.\n\nDeseja continuar?")) {
+        generateSalesPDF(filteredSalesForExport);
+        Promise.all([db.ref('orders').remove(), db.ref('pdv_sales').remove()]).then(() => alert("✅ Fechamento de caixa concluído com sucesso!"));
+      }
+    }
+
+    function renderAdminProducts() {
+      const tbody = document.getElementById('admin-products-table');
+      if(!tbody) return;
+      tbody.innerHTML = products.map(p => `
+        <tr>
+          <td class="p-4 font-semibold text-white flex items-center gap-3">${p.name}</td>
+          <td class="p-4">${p.category}</td>
+          <td class="p-4">R$ ${parseFloat(p.price).toFixed(2)}</td>
+          <td class="p-4 text-right">
+            <button onclick="openProductModal('${p.firebaseKey}')" class="px-2.5 py-1.5 bg-neutral-800 text-amber-400 rounded-lg text-xs font-semibold">Editar</button>
+            <button onclick="deleteProduct('${p.firebaseKey}')" class="px-2.5 py-1.5 bg-neutral-800 text-rose-400 rounded-lg text-xs font-semibold">Excluir</button>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    function openProductModal(key = null) {
+      const modal = document.getElementById('product-modal');
+      const form = document.getElementById('product-form');
+      form.reset();
+      currentImageBase64 = '';
+      setPreviewImage('');
+
+      if(key) {
+        const p = products.find(prod => prod.firebaseKey === key);
+        if(p) {
+          document.getElementById('edit-firebase-key').value = p.firebaseKey;
+          document.getElementById('edit-id').value = p.id;
+          document.getElementById('edit-name').value = p.name;
+          document.getElementById('edit-category').value = p.category;
+          document.getElementById('edit-price').value = p.price;
+          document.getElementById('edit-desc').value = p.desc || '';
+          document.getElementById('edit-image-url').value = p.image || '';
+          currentImageBase64 = p.image || '';
+          setPreviewImage(p.image || '');
+        }
+      } else {
+        document.getElementById('edit-firebase-key').value = '';
+        document.getElementById('edit-id').value = Date.now();
+      }
+      modal.classList.remove('hidden');
+    }
+
+    function closeProductModal() { document.getElementById('product-modal').classList.add('hidden'); }
+
+    function handleImageUpload(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        currentImageBase64 = e.target.result;
+        setPreviewImage(currentImageBase64);
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function updateImageFromUrl() {
+      const url = document.getElementById('edit-image-url').value;
+      currentImageBase64 = url;
+      setPreviewImage(url);
+    }
+
+    function setPreviewImage(src) {
+      const img = document.getElementById('image-preview');
+      const placeholder = document.getElementById('image-preview-placeholder');
+      if (src) { img.src = src; img.classList.remove('hidden'); placeholder.classList.add('hidden'); }
+      else { img.src = ''; img.classList.add('hidden'); placeholder.classList.remove('hidden'); }
+    }
+
+    function saveProduct(event) {
+      event.preventDefault();
+      const key = document.getElementById('edit-firebase-key').value;
+      const id = parseInt(document.getElementById('edit-id').value) || Date.now();
+      const name = document.getElementById('edit-name').value;
+      const category = document.getElementById('edit-category').value;
+      const price = parseFloat(document.getElementById('edit-price').value);
+      const desc = document.getElementById('edit-desc').value;
+      const image = currentImageBase64 || document.getElementById('edit-image-url').value;
+
+      const productData = { id, name, category, price, desc, image, available: true };
+      if(key) db.ref(`products/${key}`).update(productData).then(closeProductModal);
+      else db.ref('products').push(productData).then(closeProductModal);
+    }
+
+    function deleteProduct(key) {
+      if(confirm('Excluir este produto?')) db.ref(`products/${key}`).remove();
+    }
+
+    function renderPdvProducts() {
+      const grid = document.getElementById('pdv-products-grid');
+      if(!grid) return;
+      const search = (document.getElementById('pdv-search')?.value || '').toLowerCase();
+      const filtered = products.filter(p => p.name.toLowerCase().includes(search));
+
+      grid.innerHTML = filtered.map(p => `
+        <div onclick="addToPdvCart(${p.id})" class="bg-neutral-950 border border-neutral-800 p-3 rounded-xl cursor-pointer hover:border-brand-500 transition">
+          <h4 class="text-xs font-bold text-white truncate">${p.name}</h4>
+          <span class="text-xs font-black text-emerald-400 block mt-1">R$ ${parseFloat(p.price).toFixed(2)}</span>
+        </div>
+      `).join('');
+    }
+
+    function addToPdvCart(id) {
+      const product = products.find(p => p.id === id);
+      if(!product) return;
+      const existing = pdvCart.find(item => item.id === id);
+      if(existing) existing.qty++;
+      else pdvCart.push({ ...product, qty: 1 });
+      renderPdvCart();
+    }
+
+    function renderPdvCart() {
+      const container = document.getElementById('pdv-cart-items');
+      const total = pdvCart.reduce((acc, item) => acc + (item.price * item.qty), 0);
+      document.getElementById('pdv-total-display').innerText = `R$ ${total.toFixed(2)}`;
+
+      if(pdvCart.length === 0) return container.innerHTML = `<p class="text-center text-neutral-500 text-xs py-6">Nenhum item adicionado no balcão</p>`;
+
+      container.innerHTML = pdvCart.map(item => `
+        <div class="flex items-center justify-between bg-neutral-950 p-2.5 rounded-xl border border-neutral-800">
+          <div>
+            <h5 class="text-xs font-bold text-white">${item.name}</h5>
+            <span class="text-[10px] text-emerald-400 font-bold">R$ ${(item.price * item.qty).toFixed(2)}</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <button onclick="changePdvQty(${item.id}, -1)" class="w-5 h-5 bg-neutral-800 text-white rounded text-xs">-</button>
+            <span class="text-xs font-bold text-white">${item.qty}</span>
+            <button onclick="changePdvQty(${item.id}, 1)" class="w-5 h-5 bg-neutral-800 text-white rounded text-xs">+</button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function changePdvQty(id, delta) {
+      const item = pdvCart.find(i => i.id === id);
+      if(!item) return;
+      item.qty += delta;
+      if(item.qty <= 0) pdvCart = pdvCart.filter(i => i.id !== id);
+      renderPdvCart();
+    }
+
+    function clearPdvCart() { pdvCart = []; renderPdvCart(); }
+
+    function setPdvPayment(method) {
+      pdvPaymentMethod = method;
+      document.getElementById('pdv-change-container').classList.toggle('hidden', method !== 'Dinheiro');
+    }
+
+    function calculatePdvChange() {
+      const total = pdvCart.reduce((acc, item) => acc + (item.price * item.qty), 0);
+      const received = parseFloat(document.getElementById('pdv-cash-received').value) || 0;
+      const change = received - total;
+      document.getElementById('pdv-change-display').innerText = `R$ ${change > 0 ? change.toFixed(2) : '0,00'}`;
+    }
+
+    function submitPdvOrder() {
+      if(pdvCart.length === 0) return alert('Adicione produtos para finalizar a venda no balcão.');
+
+      const total = pdvCart.reduce((acc, item) => acc + (item.price * item.qty), 0);
+      const clientName = document.getElementById('pdv-client-name').value.trim() || 'Cliente Balcão';
+
+      const saleData = {
+        id: Date.now(),
+        clientName,
+        payment: pdvPaymentMethod,
+        items: pdvCart,
+        total,
+        createdAt: firebase.database.ServerValue.TIMESTAMP
+      };
+
+      db.ref('pdv_sales').push(saleData).then((ref) => {
+        if(confirm('✅ Venda realizada com sucesso! Deseja imprimir a comanda agora?')) {
+          printReceipt('Balcão', ref.key);
+        }
+        clearPdvCart();
+        document.getElementById('pdv-client-name').value = '';
+        document.getElementById('pdv-cash-received').value = '';
+      });
+    }
+  </script>
+</body>
+</html>
