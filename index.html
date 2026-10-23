@@ -818,239 +818,251 @@
     const DISTANCE_MATRIX_API_KEY = "UGobjwSKXX2sU5px1fH8r1OOhtNfoF4xgU83DpGJdS3Qm5NCj0M3K4oSSIZlg5Ag";
     const STORE_ADDRESS_ORIGIN = "Rua São Bernardo do Campo, 210, Jandira, SP, Brasil";
 
+    // URLs padrão por tipo de bebida/item
+    const IMG_REFRI = "https://images.unsplash.com/photo-1622483767028-3f66f32aef97?w=500";
+    const IMG_ENERGETICO = "https://images.unsplash.com/photo-1622543925917-763c34d1a86e?w=500";
+    const IMG_CACHACA = "https://images.unsplash.com/photo-1527281400683-1aae777175f8?w=500";
+    const IMG_COMBO = "https://images.unsplash.com/photo-1514362545857-3bc16c4c7d1b?w=500";
+    const IMG_CERVEJA = "https://images.unsplash.com/photo-1608270586620-248524c67de9?w=500";
+    const IMG_LONGNECK = "https://images.unsplash.com/photo-1584225065152-4a145421217b?w=500";
+    const IMG_VINHO = "https://images.unsplash.com/photo-1510812431401-41d2bd2722f3?w=500";
+    const IMG_TABACARIA = "https://images.unsplash.com/photo-1527661591475-527312dd65f5?w=500";
+    const IMG_VODKA = "https://images.unsplash.com/photo-1569529465841-dfecdab7503b?w=500";
+    const IMG_AGUA = "https://images.unsplash.com/photo-1548839140-29a749e1bc4e?w=500";
+
     const DEFAULT_PRODUCTS = [
-      { id: 101, name: "Água Mineral 1,5L", category: "Não Alcoólicos", price: 5.00, desc: "Garrafa 1,5L sem gás", image: "https://images.unsplash.com/photo-1548839140-29a749e1bc4e?w=500", available: true },
-      { id: 102, name: "Água Mineral 500ml", category: "Não Alcoólicos", price: 2.50, desc: "Garrafa 500ml sem gás", image: "https://images.unsplash.com/photo-1523362628745-0c100150b504?w=500", available: true },
-      { id: 103, name: "Água com Gás 500ml", category: "Não Alcoólicos", price: 4.00, desc: "Garrafa 500ml com gás", image: "https://images.unsplash.com/photo-1559839914-17aae19cec71?w=500", available: true },
-      { id: 104, name: "H2OH! 500ml", category: "Não Alcoólicos", price: 8.00, desc: "Bebida levemente gaseificada", image: "", available: true },
-      { id: 105, name: "Energético Bally 2L", category: "Gelos & Energéticos", price: 12.00, desc: "Garrafa 2L", image: "", available: true },
-      { id: 106, name: "Energético Long Night", category: "Gelos & Energéticos", price: 8.00, desc: "Lata energético", image: "", available: true },
-      { id: 107, name: "Energético Vibe", category: "Gelos & Energéticos", price: 10.00, desc: "Lata energético", image: "", available: true },
-      { id: 108, name: "Energético Monster", category: "Gelos & Energéticos", price: 12.00, desc: "Lata 473ml", image: "", available: true },
-      { id: 109, name: "Energético Red Bull 250ml", category: "Gelos & Energéticos", price: 12.00, desc: "Lata 250ml", image: "", available: true },
-      { id: 201, name: "Cachaça 51 1L", category: "Cachaças", price: 16.00, options: "Garrafa:16.00, Dose:4.00", desc: "Escolha entre Garrafa ou Dose", image: "", available: true },
-      { id: 202, name: "Aperol Aperitivo 750ml", category: "Cachaças", price: 60.00, desc: "Garrafa 750ml", image: "", available: true },
-      { id: 203, name: "Rum Bacardi Carta Blanca 1L", category: "Cachaças", price: 50.00, desc: "Garrafa 1L", image: "", available: true },
-      { id: 204, name: "Liqueur Bananinha 1L", category: "Cachaças", price: 45.00, desc: "Garrafa 1L", image: "", available: true },
-      { id: 205, name: "Campari Aperitivo 900ml", category: "Cachaças", price: 70.00, options: "Garrafa:70.00, Dose:10.00", desc: "Escolha entre Garrafa ou Dose", image: "", available: true },
-      { id: 206, name: "Cana Boa", category: "Cachaças", price: 3.00, desc: "Dose / Garrafinha", image: "", available: true },
-      { id: 207, name: "Canelinha Garrafa", category: "Cachaças", price: 18.00, desc: "Aperitivo de Canela Garrafa", image: "", available: true },
-      { id: 208, name: "Canelinha Copão", category: "Cachaças", price: 10.00, desc: "Copão preparado", image: "", available: true },
-      { id: 209, name: "Combo Canelinha", category: "Combos", price: 38.00, desc: "Combo especial Canelinha", image: "", available: true },
-      { id: 210, name: "Catuaba Selvagem 1L", category: "Cachaças", price: 18.00, desc: "Garrafa 1L", image: "", available: true },
-      { id: 211, name: "Vermouth Contini", category: "Cachaças", price: 35.00, options: "Garrafa:35.00, Meia Mão:5.00", desc: "Escolha entre Garrafa ou Meia Mão", image: "", available: true },
-      { id: 212, name: "Corote Flavored 500ml", category: "Cachaças", price: 6.00, desc: "Coquetel alcoólico", image: "", available: true, flavors: "Pêssego, Limão, Morango, Mirtilo, Baunilha" },
-      { id: 213, name: "Cynar Aperitivo", category: "Cachaças", price: 30.00, options: "Garrafa:30.00, Dose:5.00", desc: "Escolha entre Garrafa ou Dose", image: "", available: true },
-      { id: 214, name: "Conhaque Domecq 1L", category: "Cachaças", price: 45.00, options: "Garrafa:45.00, Dose:7.00", desc: "Escolha entre Garrafa ou Dose", image: "", available: true },
-      { id: 215, name: "Conhaque Dreher 900ml", category: "Cachaças", price: 26.00, options: "Garrafa:26.00, Dose:4.00", desc: "Escolha entre Garrafa ou Dose", image: "", available: true },
-      { id: 216, name: "Duelo Tradicional", category: "Cachaças", price: 3.50, desc: "Coquetel alcoólico", image: "", available: true },
-      { id: 217, name: "Duelo Sabores", category: "Cachaças", price: 4.00, desc: "Sabores variados", image: "", available: true },
-      { id: 218, name: "Gnutre Tradicional", category: "Cachaças", price: 15.00, desc: "Garrafa", image: "", available: true },
-      { id: 219, name: "Gnutre Groselha", category: "Cachaças", price: 12.00, desc: "Sabor Groselha", image: "", available: true },
-      { id: 220, name: "Gin Golf", category: "Cachaças", price: 35.00, options: "Garrafa:35.00, Dose:5.00", desc: "Escolha entre Garrafa ou Dose", image: "", available: true },
-      { id: 221, name: "Jurupinga 970ml", category: "Cachaças", price: 35.00, desc: "Vinho Suave Composto", image: "", available: true },
-      { id: 222, name: "Cachaça Kariri", category: "Cachaças", price: 22.00, options: "Garrafa:22.00, Dose:7.00", desc: "Escolha entre Garrafa ou Dose", image: "", available: true },
-      { id: 223, name: "Rum Montilla Carta Branca", category: "Cachaças", price: 45.00, desc: "Garrafa 1L", image: "", available: true },
-      { id: 224, name: "Aperitivo Para Tudo", category: "Cachaças", price: 16.00, options: "Garrafa:16.00, Dose:4.00", desc: "Escolha entre Garrafa ou Dose", image: "", available: true },
-      { id: 225, name: "Pararine", category: "Cachaças", price: 18.00, desc: "Garrafa aperitivo", image: "", available: true },
-      { id: 226, name: "Pitu 1L Tradicional", category: "Cachaças", price: 18.00, desc: "Cachaça Pitu Garrafa 1L", image: "", available: true },
-      { id: 227, name: "Pitu Banana", category: "Cachaças", price: 7.00, desc: "Garrafinha saborizada", image: "", available: true },
-      { id: 228, name: "Pitu Limão", category: "Cachaças", price: 6.00, desc: "Garrafinha saborizada", image: "", available: true },
-      { id: 229, name: "Pitu Caju", category: "Cachaças", price: 7.00, desc: "Garrafinha saborizada", image: "", available: true },
-      { id: 230, name: "Pitu Lata 350ml", category: "Cachaças", price: 6.00, desc: "Lata 350ml", image: "", available: true },
-      { id: 231, name: "Cabaré Prata", category: "Cachaças", price: 54.00, desc: "Cachaça Cabaré Extra Premium Prata", image: "", available: true },
-      { id: 232, name: "Cabaré Ouro", category: "Cachaças", price: 52.00, desc: "Cachaça Cabaré Ouro Envelhecida", image: "", available: true },
-      { id: 233, name: "Cabaré Amburana", category: "Cachaças", price: 65.00, desc: "Armazenada em tonéis de Amburana", image: "", available: true },
-      { id: 234, name: "Cabaré Fire", category: "Cachaças", price: 70.00, desc: "Cachaça com Canela", image: "", available: true },
-      { id: 235, name: "Conhaque Presidente", category: "Cachaças", price: 20.00, options: "Garrafa:20.00, Dose:4.00", desc: "Escolha entre Garrafa ou Dose", image: "", available: true },
-      { id: 236, name: "Saquê Culinário / Bebida", category: "Cachaças", price: 25.00, desc: "Garrafa Saquê Azuma Kirin", image: "", available: true },
-      { id: 237, name: "Aperitivo São Francisco", category: "Cachaças", price: 32.00, options: "Garrafa:32.00, Dose:5.00", desc: "Escolha entre Garrafa ou Dose", image: "", available: true },
-      { id: 238, name: "Conhaque São João da Barra", category: "Cachaças", price: 30.00, desc: "Garrafa", image: "", available: true },
-      { id: 239, name: "Cachaça Seleta 1L", category: "Cachaças", price: 50.00, desc: "Cachaça Artesanal Ouro", image: "", available: true },
-      { id: 240, name: "Velho Barreiro 910ml", category: "Cachaças", price: 16.00, options: "Garrafa:16.00, Dose:4.00", desc: "Escolha entre Garrafa ou Dose", image: "", available: true },
-      { id: 241, name: "Cachaça Ypióca Ouro / Prata", category: "Cachaças", price: 50.00, desc: "Garrafa com Palha", image: "", available: true },
-      { id: 301, name: "Cerveja Amstel (Fardo / Lata)", category: "Cervejas", price: 37.00, options: "Fardo:37.00, Lata Solta:4.00", desc: "Escolha Fardo ou Lata Solta", image: "", available: true },
-      { id: 302, name: "Cerveja Brahma 269ml", category: "Cervejas", price: 46.00, options: "Fardo:46.00, Lata Solta:4.50", desc: "Escolha Fardo ou Lata Solta", image: "", available: true },
-      { id: 303, name: "Cerveja Brahma 350ml", category: "Cervejas", price: 48.00, options: "Fardo:48.00, Lata Solta:5.00", desc: "Escolha Fardo ou Lata Solta", image: "", available: true },
-      { id: 304, name: "Cerveja Budweiser Pack 8 Unid", category: "Cervejas", price: 28.00, options: "Pack 8 Unidades:28.00, Lata Solta:3.50", desc: "Escolha Pack ou Lata Solta", image: "", available: true },
-      { id: 305, name: "Cerveja Budweiser Pack 15 Unid", category: "Cervejas", price: 52.00, options: "Pack 15 Unidades:52.00, Lata Solta:3.50", desc: "Escolha Pack ou Lata Solta", image: "", available: true },
-      { id: 306, name: "Cerveja Heineken (Fardo / Lata)", category: "Cervejas", price: 38.00, options: "Fardo:38.00, Lata Solta:5.00", desc: "Escolha Fardo ou Lata Solta", image: "", available: true },
-      { id: 307, name: "Cerveja Império (Fardo / Lata)", category: "Cervejas", price: 50.00, options: "Fardo:50.00, Lata Solta:4.00", desc: "Escolha Fardo ou Lata Solta", image: "", available: true },
-      { id: 308, name: "Cerveja Itaipava 350ml (Fardo)", category: "Cervejas", price: 40.00, options: "Fardo:40.00, Lata Solta:3.50", desc: "Escolha Fardo ou Lata Solta", image: "", available: true },
-      { id: 309, name: "Cerveja Itaipava Zero Álcool (Fardo)", category: "Cervejas", price: 60.00, options: "Fardo:60.00, Lata Solta:5.50", desc: "Escolha Fardo ou Lata Solta", image: "", available: true },
-      { id: 310, name: "Cerveja Skol Pack 15 Unid", category: "Cervejas", price: 55.00, options: "Pack 15 Unidades:55.00, Lata Solta:4.00", desc: "Escolha Pack ou Lata Solta", image: "", available: true },
-      { id: 311, name: "Cerveja Skol Pack 8 Unid", category: "Cervejas", price: 32.00, options: "Pack 8 Unidades:32.00, Lata Solta:4.00", desc: "Escolha Pack ou Lata Solta", image: "", available: true },
-      { id: 312, name: "Cerveja Petra (Fardo / Lata)", category: "Cervejas", price: 34.00, options: "Fardo:34.00, Lata Solta:3.00", desc: "Escolha Fardo ou Lata Solta", image: "", available: true },
-      { id: 313, name: "Cerveja Skol (Fardo / Lata)", category: "Cervejas", price: 42.00, options: "Fardo:42.00, Lata Solta:3.50", desc: "Escolha Fardo ou Lata Solta", image: "", available: true },
-      { id: 314, name: "Cerveja Spaten (Fardo / Lata)", category: "Cervejas", price: 36.00, options: "Fardo:36.00, Lata Solta:5.00", desc: "Escolha Fardo ou Lata Solta", image: "", available: true },
-      { id: 315, name: "Long Neck Budweiser (Fardo c/ 6)", category: "Cervejas", price: 48.00, options: "Fardo c/ 6:48.00, Solta:8.00", desc: "Escolha Fardo ou Unidade", image: "", available: true },
-      { id: 316, name: "Long Neck Corona 330ml", category: "Cervejas", price: 8.00, desc: "Unidade Long Neck", image: "", available: true },
-      { id: 317, name: "Long Neck Corona Zero", category: "Cervejas", price: 8.50, desc: "Unidade Long Neck Sem Álcool", image: "", available: true },
-      { id: 318, name: "Long Neck Spaten", category: "Cervejas", price: 8.00, desc: "Unidade Long Neck", image: "", available: true },
-      { id: 319, name: "Long Neck Stella Artois", category: "Cervejas", price: 8.00, desc: "Unidade Long Neck 330ml", image: "", available: true },
-      { id: 320, name: "Long Neck Heineken 330ml", category: "Cervejas", price: 8.00, desc: "Unidade Long Neck", image: "", available: true },
-      { id: 321, name: "Long Neck Heineken Zero 330ml", category: "Cervejas", price: 8.50, desc: "Unidade Long Neck Sem Álcool", image: "", available: true },
-      { id: 322, name: "Skol Beats Long Neck / Lata", category: "Cervejas", price: 10.00, desc: "Sabor Secret/Senses/150bpm", image: "", available: true },
-      { id: 323, name: "Smirnoff Ice Long Neck 275ml", category: "Cervejas", price: 10.00, desc: "Bebida mista refrescante", image: "", available: true },
-      { id: 324, name: "Xeque-Mate Lata 355ml", category: "Cervejas", price: 10.00, desc: "Chá mate, rum, guaraná e limão", image: "", available: true },
-      { id: 401, name: "Gin Beefeater Laranja 750ml", category: "Destilados", price: 200.00, desc: "Gin Beefeater Blood Orange", image: "", available: true },
-      { id: 402, name: "Combo Gin Beefeater Laranja", category: "Combos", price: 240.00, desc: "1 Beefeater Laranja + Energéticos + Gelo de Sabor", image: "", available: true },
-      { id: 403, name: "Gin Beefeater Sabores 750ml", category: "Destilados", price: 140.00, desc: "Beefeater Pink / Lemon", image: "", available: true },
-      { id: 404, name: "Combo Gin Beefeater Sabores", category: "Combos", price: 190.00, options: "Combo Garrafa:190.00, Copão Preparado:40.00", desc: "Escolha Garrafa Combo ou Copão", image: "", available: true },
-      { id: 405, name: "Gin Beefeater Tradicional 750ml", category: "Destilados", price: 120.00, desc: "London Dry 750ml", image: "", available: true },
-      { id: 406, name: "Combo Gin Beefeater Tradicional", category: "Combos", price: 160.00, options: "Combo Garrafa:160.00, Copão Preparado:35.00", desc: "Escolha Garrafa Combo ou Copão", image: "", available: true },
-      { id: 407, name: "Gin Bombay Sapphire 750ml", category: "Destilados", price: 120.00, desc: "London Dry Importado", image: "", available: true },
-      { id: 408, name: "Combo Gin Bombay Sapphire", category: "Combos", price: 165.00, desc: "1 Bombay Sapphire + Energéticos + Gelo", image: "", available: true },
-      { id: 409, name: "Gin Eternity 900ml", category: "Destilados", price: 30.00, desc: "Garrafa de Gin", image: "", available: true },
-      { id: 410, name: "Combo Gin Eternity", category: "Combos", price: 50.00, desc: "1 Eternity + Energético 2L + Gelo Saborizado", image: "", available: true },
-      { id: 411, name: "Gin Gordon's London Dry 750ml", category: "Destilados", price: 80.00, desc: "Garrafa 750ml", image: "", available: true },
-      { id: 412, name: "Combo Gin Gordon's", category: "Combos", price: 125.00, desc: "1 Gordon's + Energéticos + Gelo", image: "", available: true },
-      { id: 413, name: "Gin Kiryos", category: "Destilados", price: 20.00, desc: "Garrafa de Gin Kiryos", image: "", available: true },
-      { id: 414, name: "Combo Gin Kiryos", category: "Combos", price: 40.00, desc: "1 Gin Kiryos + Energético 2L", image: "", available: true },
-      { id: 415, name: "Gin Rock's 1L", category: "Destilados", price: 40.00, desc: "Garrafa 1L", image: "", available: true },
-      { id: 416, name: "Combo Gin Rock's", category: "Combos", price: 60.00, desc: "1 Gin Rock's + Energético 2L + Gelo", image: "", available: true },
-      { id: 417, name: "Gin Tanqueray Sabores 750ml", category: "Destilados", price: 165.00, desc: "Sevilla / Royale / Rangpur", image: "", available: true },
-      { id: 418, name: "Combo Gin Tanqueray Sabores", category: "Combos", price: 205.00, desc: "1 Tanqueray Sabores + Red Bull + Gelo", image: "", available: true },
-      { id: 419, name: "Gin Tanqueray Tradicional 750ml", category: "Destilados", price: 120.00, desc: "London Dry Importado", image: "", available: true },
-      { id: 420, name: "Combo Gin Tanqueray Tradicional", category: "Combos", price: 165.00, desc: "1 Tanqueray Tradicional + Red Bull + Gelo", image: "", available: true },
-      { id: 501, name: "Licor 43 Chocolate 700ml", category: "Destilados", price: 190.00, desc: "Licor 43 Chocolate Espanha", image: "", available: true },
-      { id: 502, name: "Licor 43 Edição Espanha", category: "Destilados", price: 220.00, desc: "Edição Especial Espanha 700ml", image: "", available: true },
-      { id: 503, name: "Licor 43 Orchata / Barista", category: "Destilados", price: 210.00, desc: "Edição Especial Orchata ou Barista", image: "", available: true },
-      { id: 504, name: "Licor 43 Tradicional 700ml", category: "Destilados", price: 165.00, desc: "Diego Zamora Licor 43 Espanhol", image: "", available: true },
-      { id: 505, name: "Licor Ballena Morango com Creme", category: "Destilados", price: 160.00, desc: "Tequila com Creme de Morango", image: "", available: true },
-      { id: 506, name: "Licor Ballena Chocolate", category: "Destilados", price: 175.00, desc: "Edição Especial Chocolate", image: "", available: true },
-      { id: 507, name: "Licor Ballena Coco", category: "Destilados", price: 175.00, desc: "Edição Especial Coco", image: "", available: true },
-      { id: 508, name: "Licor Bem Casado", category: "Destilados", price: 55.00, desc: "Garrafa Licor Bem Casado", image: "", available: true },
-      { id: 509, name: "Licor Don Luiz", category: "Destilados", price: 90.00, desc: "Licor Doce de Leite", image: "", available: true },
-      { id: 510, name: "Licor Malibu Rum de Coco 750ml", category: "Destilados", price: 70.00, desc: "Rum Caribenho com Coco", image: "", available: true },
-      { id: 511, name: "Combo Malibu", category: "Combos", price: 100.00, desc: "1 Malibu + Suco ou Energético", image: "", available: true },
-      { id: 512, name: "Licor Peachtree Pêssego", category: "Destilados", price: 170.00, desc: "Licor fino de Pêssego", image: "", available: true },
-      { id: 513, name: "Espumante Chandon Brut / Passion", category: "Vinhos", price: 120.00, desc: "Garrafa Espumante 750ml", image: "", available: true },
-      { id: 601, name: "Coca-Cola 2L", category: "Não Alcoólicos", price: 14.00, desc: "Garrafa PET 2 Litros", image: "", available: true },
-      { id: 602, name: "Coca-Cola Retornável (C/ Troca)", category: "Não Alcoólicos", price: 8.50, desc: "Com a entrega do casco vazio", image: "", available: true },
-      { id: 603, name: "Coca-Cola Retornável (Sem Casco)", category: "Não Alcoólicos", price: 14.00, desc: "Incluso valor do garrafão", image: "", available: true },
-      { id: 604, name: "Guaraná Dolly 2L", category: "Não Alcoólicos", price: 7.00, desc: "Garrafa 2 Litros", image: "", available: true },
-      { id: 605, name: "Fanta Laranja / Uva 2L", category: "Não Alcoólicos", price: 12.00, desc: "Garrafa 2 Litros", image: "", available: true },
-      { id: 606, name: "Guaraná Antarctica 2L", category: "Não Alcoólicos", price: 12.00, desc: "Garrafa 2 Litros", image: "", available: true },
-      { id: 607, name: "Sprite 2L", category: "Não Alcoólicos", price: 12.00, desc: "Garrafa 2 Litros", image: "", available: true },
-      { id: 608, name: "Sukita Laranja 2L", category: "Não Alcoólicos", price: 8.00, desc: "Garrafa 2 Litros", image: "", available: true },
-      { id: 609, name: "Tubaína 2L", category: "Não Alcoólicos", price: 7.00, desc: "Garrafa 2 Litros", image: "", available: true },
-      { id: 610, name: "Refrigerante Lata (Variados)", category: "Não Alcoólicos", price: 5.00, desc: "Lata 350ml (Coca, Guaraná, Fanta, Sprite)", image: "", available: true },
-      { id: 611, name: "Suco Del Valle 1L", category: "Não Alcoólicos", price: 12.00, desc: "Caixa 1L", image: "", available: true },
-      { id: 612, name: "Suco Del Valle Lata", category: "Não Alcoólicos", price: 6.00, desc: "Lata 290ml", image: "", available: true },
-      { id: 613, name: "Gatorade 500ml", category: "Não Alcoólicos", price: 8.00, desc: "Isotónico 500ml", image: "", available: true },
-      { id: 614, name: "Suco Prats 900ml", category: "Não Alcoólicos", price: 14.00, desc: "Suco 100% Integral", image: "", available: true },
-      { id: 700, name: "Alumínio Narguile (Unidade Solta)", category: "Tabacaria", price: 0.50, desc: "Folha solta de alumínio para narguile", image: "", available: true },
-      { id: 701, name: "Alumínio Narguile (Caixa/Rolo)", category: "Tabacaria", price: 20.00, desc: "Rolo ou Caixa fechada", image: "", available: true },
-      { id: 702, name: "Borracha de Rosh", category: "Tabacaria", price: 5.00, desc: "Vedação para rosh", image: "", available: true },
-      { id: 703, name: "Borracha de Mangueira", category: "Tabacaria", price: 5.00, desc: "Vedação mangueira", image: "", available: true },
-      { id: 704, name: "Borracha de Vaso", category: "Tabacaria", price: 8.00, desc: "Vedação vaso narguile", image: "", available: true },
-      { id: 705, name: "Carvão para Narguile 1kg", category: "Tabacaria", price: 40.00, desc: "Carvão de coco 1kg", image: "", available: true },
-      { id: 706, name: "Carvão para Narguile 500g", category: "Tabacaria", price: 35.00, desc: "Carvão de coco 500g", image: "", available: true },
-      { id: 707, name: "Carvão Solto", category: "Tabacaria", price: 1.00, desc: "Unidade do carvão", image: "", available: true },
-      { id: 708, name: "Cuia de Silicone", category: "Tabacaria", price: 9.00, desc: "Cuia para preparo", image: "", available: true },
-      { id: 709, name: "Dixavador", category: "Tabacaria", price: 5.00, desc: "Triturador de ervas", image: "", available: true },
-      { id: 710, name: "Forninho Acendedor a Gás", category: "Tabacaria", price: 120.00, desc: "Acendedor portátil", image: "", available: true },
-      { id: 711, name: "Refil de Gás", category: "Tabacaria", price: 35.00, desc: "Lata de gás refil", image: "", available: true },
-      { id: 712, name: "Forninho Elétrico Médio", category: "Tabacaria", price: 40.00, desc: "Acendedor elétrico", image: "", available: true },
-      { id: 713, name: "Forninho Elétrico Pequeno", category: "Tabacaria", price: 30.00, desc: "Acendedor elétrico", image: "", available: true },
-      { id: 714, name: "Isqueiro Bic / Tradicional", category: "Tabacaria", price: 3.00, desc: "Unidade", image: "", available: true },
-      { id: 715, name: "Rosh de Cerâmica / Silicone", category: "Tabacaria", price: 25.00, desc: "Queimador narguile", image: "", available: true },
-      { id: 716, name: "Prato para Narguile", category: "Tabacaria", price: 20.00, desc: "Prato de alumínio", image: "", available: true },
-      { id: 717, name: "Piteira Pequena", category: "Tabacaria", price: 5.00, desc: "Piteira higiênica", image: "", available: true },
-      { id: 718, name: "Piteira Longa", category: "Tabacaria", price: 6.00, desc: "Piteira higiênica longa", image: "", available: true },
-      { id: 719, name: "Seda Zomo", category: "Tabacaria", price: 5.00, options: "Livreto:5.00, Solta:0.50", desc: "Escolha Livreto ou Folha Solta", image: "", available: true },
-      { id: 720, name: "Seda Sadhu Tradicional", category: "Tabacaria", price: 6.00, desc: "Livreto de seda", image: "", available: true },
-      { id: 721, name: "Seda Sadhu Longa", category: "Tabacaria", price: 8.00, desc: "Livreto King Size", image: "", available: true },
-      { id: 722, name: "Tabaco Crema", category: "Tabacaria", price: 17.00, desc: "Pacote de tabaco", image: "", available: true },
-      { id: 723, name: "Tabaco Amsterdam", category: "Tabacaria", price: 17.00, desc: "Pacote de tabaco 25g", image: "", available: true },
-      { id: 724, name: "Tabaco Tabaquin", category: "Tabacaria", price: 17.00, desc: "Pacote de tabaco", image: "", available: true },
-      { id: 725, name: "Tesoura para Tabaco", category: "Tabacaria", price: 15.00, desc: "Tesourinha de mola", image: "", available: true },
-      { id: 726, name: "Vaso de Narguile Grande", category: "Tabacaria", price: 80.00, desc: "Vaso de vidro grande", image: "", available: true },
-      { id: 727, name: "Vaso de Narguile Pequeno", category: "Tabacaria", price: 35.00, desc: "Vaso de vidro pequeno", image: "", available: true },
-      { id: 728, name: "Essência Ziggy", category: "Tabacaria", price: 12.00, desc: "Caixinha 50g", image: "", available: true, flavors: "Melancia, Menta, Tropical, Banana, Maçã Verde, Morango" },
-      { id: 729, name: "Essência Primal", category: "Tabacaria", price: 12.00, desc: "Caixinha 50g", image: "", available: true, flavors: "Melancia Ice, Menta, Chiclete" },
-      { id: 730, name: "Essência Zomo", category: "Tabacaria", price: 11.00, desc: "Caixinha 50g", image: "", available: true, flavors: "Strong Mint, Splash Lemon, Swiss Alps, Blue Wave" },
-      { id: 731, name: "Essência Adalya", category: "Tabacaria", price: 18.00, desc: "Caixinha 50g Premium", image: "", available: true, flavors: "Love 66, Lady Killer, Menta, Uva" },
-      { id: 732, name: "Essência Haze", category: "Tabacaria", price: 20.00, desc: "Caixinha 50g Premium", image: "", available: true },
-      { id: 733, name: "Essência Nay", category: "Tabacaria", price: 13.00, desc: "Caixinha 50g", image: "", available: true, flavors: "Cinnamon, Melon, Passiflora, Fresh Watermelon" },
-      { id: 734, name: "Essência Magic", category: "Tabacaria", price: 13.00, desc: "Caixinha 50g", image: "", available: true },
-      { id: 735, name: "Essência Lucky", category: "Tabacaria", price: 13.00, desc: "Caixinha 50g", image: "", available: true },
-      { id: 736, name: "Essência Onix", category: "Tabacaria", price: 13.00, desc: "Caixinha 50g", image: "", available: true },
-      { id: 801, name: "Tequila Jose Cuervo Ouro 750ml", category: "Destilados", price: 120.00, desc: "Jose Cuervo Especial Reposado", image: "", available: true },
-      { id: 802, name: "Tequila Jose Cuervo Prata 750ml", category: "Destilados", price: 110.00, desc: "Jose Cuervo Especial Silver", image: "", available: true },
-      { id: 803, name: "Tequi Loka", category: "Destilados", price: 35.00, desc: "Coquetel de tequila", image: "", available: true },
-      { id: 804, name: "Tequi Love", category: "Destilados", price: 38.00, desc: "Coquetel alcoólico com tequila", image: "", available: true },
-      { id: 901, name: "Vinho Bella Aurora Suave", category: "Vinhos", price: 18.00, desc: "Vinho de Mesa Suave", image: "", available: true },
-      { id: 902, name: "Vinho Bella Aurora Seco", category: "Vinhos", price: 19.00, desc: "Vinho de Mesa Seco", image: "", available: true },
-      { id: 903, name: "Cantinho do Valle 500ml", category: "Vinhos", price: 6.00, desc: "Coquetel de Vinho", image: "", available: true },
-      { id: 904, name: "Vinho Dom Bosco Suave 750ml", category: "Vinhos", price: 18.00, desc: "Vinho Tinto Suave", image: "", available: true },
-      { id: 905, name: "Vinho Dom Bosco Seco 750ml", category: "Vinhos", price: 19.00, desc: "Vinho Tinto Seco", image: "", available: true },
-      { id: 906, name: "Chopp de Vinho Draft 600ml", category: "Vinhos", price: 12.00, desc: "Garrafa Draft Chopp de Vinho", image: "", available: true },
-      { id: 907, name: "Vinho Pergola Suave 1L", category: "Vinhos", price: 25.00, desc: "Vinho Tinto Suave 1L", image: "", available: true },
-      { id: 908, name: "Vinho Pergola Seco 1L", category: "Vinhos", price: 26.00, desc: "Vinho Tinto Seco 1L", image: "", available: true },
-      { id: 909, name: "Vinho Santomé Suave", category: "Vinhos", price: 22.00, desc: "Garrafa Suave", image: "", available: true },
-      { id: 910, name: "Vinho Santomé Seco", category: "Vinhos", price: 23.00, desc: "Garrafa Seco", image: "", available: true },
-      { id: 1001, name: "Vodka Absolut Tradicional 1L", category: "Destilados", price: 100.00, desc: "Garrafa 1L Sueca Importada", image: "", available: true },
-      { id: 1002, name: "Combo Vodka Absolut Tradicional", category: "Combos", price: 150.00, desc: "1 Absolut 1L + Energéticos + Gelo de Sabor", image: "", available: true },
-      { id: 1003, name: "Vodka Absolut Sabores 1L", category: "Destilados", price: 95.00, desc: "Vanilla / Apeach / Mango / Watermelon", image: "", available: true, flavors: "Vanilla, Apeach, Mango, Watermelon" },
-      { id: 1004, name: "Combo Vodka Absolut Sabores", category: "Combos", price: 140.00, desc: "1 Absolut Sabores + Energéticos + Gelo", image: "", available: true },
-      { id: 1005, name: "Vodka Askov 900ml", category: "Destilados", price: 18.00, desc: "Garrafa Tradicional / Sabores", image: "", available: true, flavors: "Tradicional, Frutas Vermelhas, Maracujá, Limão, Mirtilo" },
-      { id: 1006, name: "Vodka Balalaika 1L", category: "Destilados", price: 17.00, desc: "Garrafa 1L", image: "", available: true },
-      { id: 1007, name: "Vodka Cîroc Red Berry 750ml", category: "Destilados", price: 250.00, desc: "Ultra Premium Francesa", image: "", available: true },
-      { id: 1008, name: "Combo Cîroc Red Berry", category: "Combos", price: 290.00, desc: "1 Cîroc Red Berry + 5 Red Bull + Gelo", image: "", available: true },
-      { id: 1009, name: "Vodka Cîroc Sabores 750ml", category: "Destilados", price: 350.00, desc: "Peach / Coconut / Mango", image: "", available: true, flavors: "Peach, Coconut, Mango" },
-      { id: 1010, name: "Combo Cîroc Sabores", category: "Combos", price: 400.00, desc: "1 Cîroc Sabores + 5 Red Bull + Gelo", image: "", available: true },
-      { id: 1011, name: "Vodka Grey Goose Tradicional 750ml", category: "Destilados", price: 155.00, desc: "Ultra Premium Francesa", image: "", available: true },
-      { id: 1012, name: "Combo Grey Goose Tradicional", category: "Combos", price: 205.00, desc: "1 Grey Goose + 5 Red Bull + Gelo", image: "", available: true },
-      { id: 1013, name: "Vodka Grey Goose Sabores 750ml", category: "Destilados", price: 180.00, desc: "L'Orange / La Poire", image: "", available: true, flavors: "L'Orange, La Poire" },
-      { id: 1014, name: "Combo Grey Goose Sabores", category: "Combos", price: 230.00, desc: "1 Grey Goose Sabores + Red Bull + Gelo", image: "", available: true },
-      { id: 1015, name: "Vodka Intencion 900ml", category: "Destilados", price: 15.00, desc: "Garrafa de Vodka", image: "", available: true },
-      { id: 1016, name: "Vodka Smirnoff 998ml", category: "Destilados", price: 45.00, desc: "Garrafa No 21", image: "", available: true },
-      { id: 1017, name: "Combo Smirnoff + Energético Vibe", category: "Combos", price: 75.00, desc: "1 Smirnoff 1L + 1 Energético Vibe 2L + Gelo", image: "", available: true },
-      { id: 1018, name: "Combo Smirnoff + Red Bull", category: "Combos", price: 100.00, desc: "1 Smirnoff 1L + 4 Red Bull 250ml + Gelo", image: "", available: true },
-      { id: 1101, name: "Whisky Ballantine's Finest 1L", category: "Destilados", price: 85.00, desc: "Whisky Escocês 1L", image: "", available: true },
-      { id: 1102, name: "Combo Ballantine's + Vibe 2L", category: "Combos", price: 105.00, desc: "1 Ballantine's Finest + Energético Vibe 2L + Gelo", image: "", available: true },
-      { id: 1103, name: "Combo Ballantine's + Red Bull", category: "Combos", price: 130.00, desc: "1 Ballantine's Finest + 4 Red Bull + Gelo", image: "", available: true },
-      { id: 1104, name: "Whisky Ballantine's 12 Anos 1L", category: "Destilados", price: 160.00, desc: "Garrafa 1L 12 Anos", image: "", available: true },
-      { id: 1105, name: "Combo Ballantine's 12 Anos", category: "Combos", price: 200.00, desc: "1 Ballantine's 12A + Red Bull + Gelo de Sabor", image: "", available: true },
-      { id: 1106, name: "Whisky Ballantine's Wild / Abacaxi 1L", category: "Destilados", price: 95.00, desc: "Whisky Saborizado Abacaxi", image: "", available: true },
-      { id: 1107, name: "Combo Ballantine's Abacaxi + Vibe", category: "Combos", price: 125.00, desc: "1 Ballantine's Abacaxi + Energético 2L + Gelo", image: "", available: true },
-      { id: 1108, name: "Combo Ballantine's Abacaxi + Red Bull", category: "Combos", price: 145.00, desc: "1 Ballantine's Abacaxi + 4 Red Bull + Gelo de Coco", image: "", available: true },
-      { id: 1109, name: "Whisky Johnnie Walker Black Label 1L", category: "Destilados", price: 195.00, desc: "Whisky Escocês 12 Anos 1L", image: "", available: true },
-      { id: 1110, name: "Combo Black Label", category: "Combos", price: 235.00, desc: "1 Black Label 1L + 4 Red Bull + Gelo de Sabor", image: "", available: true },
-      { id: 1111, name: "Whisky Double Black Label 1L", category: "Destilados", price: 285.00, desc: "Johnnie Walker Double Black 1L", image: "", available: true },
-      { id: 1112, name: "Combo Double Black Label", category: "Combos", price: 330.00, desc: "1 Double Black + 5 Red Bull + Gelo de Sabor", image: "", available: true },
-      { id: 1113, name: "Whisky Buchanan's 12 Anos 1L", category: "Destilados", price: 210.00, desc: "Whisky Escocês 1L", image: "", available: true },
-      { id: 1114, name: "Combo Buchanan's 12 Anos", category: "Combos", price: 250.00, desc: "1 Buchanan's + 4 Red Bull + Gelo de Coco", image: "", available: true },
-      { id: 1115, name: "Whisky White Horse (Cavalo Branco) 1L", category: "Destilados", price: 80.00, desc: "Garrafa 1L", image: "", available: true },
-      { id: 1116, name: "Combo Cavalo Branco + Vibe", category: "Combos", price: 100.00, desc: "1 Cavalo Branco 1L + Energético Vibe 2L + Gelo", image: "", available: true },
-      { id: 1117, name: "Combo Cavalo Branco + Red Bull", category: "Combos", price: 120.00, desc: "1 Cavalo Branco 1L + 4 Red Bull + Gelo", image: "", available: true },
-      { id: 1118, name: "Whisky Chanceler 1L", category: "Destilados", price: 20.00, desc: "Garrafa 1L", image: "", available: true },
-      { id: 1119, name: "Combo Chanceler + Energético 2L", category: "Combos", price: 40.00, desc: "1 Chanceler 1L + Energético 2L + Gelo", image: "", available: true },
-      { id: 1120, name: "Whisky Chivas Regal 12 Anos 1L", category: "Destilados", price: 170.00, desc: "Whisky Escocês Premium", image: "", available: true },
-      { id: 1121, name: "Combo Chivas Regal 12 Anos", category: "Combos", price: 210.00, desc: "1 Chivas Regal + 4 Red Bull + Gelo", image: "", available: true },
-      { id: 1122, name: "Whisky Gold Label Reserve 750ml", category: "Destilados", price: 300.00, desc: "Garrafa 750ml", image: "", available: true },
-      { id: 1123, name: "Combo Gold Label Reserve", category: "Combos", price: 350.00, desc: "1 Gold Label + 5 Red Bull + Gelo de Sabor", image: "", available: true },
-      { id: 1124, name: "Whisky Jack Daniel's N° 7 1L", category: "Destilados", price: 165.00, desc: "Tennessee Whiskey 1L", image: "", available: true },
-      { id: 1125, name: "Combo Jack Daniel's N° 7", category: "Combos", price: 210.00, desc: "1 Jack N° 7 + 4 Red Bull + Gelo de Coco", image: "", available: true },
-      { id: 1126, name: "Whisky Jack Daniel's Fire / Honey 1L", category: "Destilados", price: 175.00, desc: "Sabor Canela ou Mel", image: "", available: true, flavors: "Fire (Canela), Honey (Mel)" },
-      { id: 1127, name: "Combo Jack Daniel's Fire / Honey", category: "Combos", price: 215.00, desc: "1 Jack Fire/Honey + 4 Red Bull + Gelo", image: "", available: true },
-      { id: 1128, name: "Whisky Jack Daniel's Apple 1L", category: "Destilados", price: 200.00, desc: "Sabor Maçã Verde", image: "", available: true },
-      { id: 1129, name: "Combo Jack Daniel's Apple", category: "Combos", price: 240.00, desc: "1 Jack Apple + 4 Red Bull + Gelo", image: "", available: true },
-      { id: 1130, name: "Whisky Old Parr 12 Anos 1L", category: "Destilados", price: 170.00, desc: "Grand Old Parr 12 Anos", image: "", available: true },
-      { id: 1131, name: "Combo Old Parr 12 Anos", category: "Combos", price: 210.00, desc: "1 Old Parr 12A + 4 Red Bull + Gelo de Coco", image: "", available: true },
-      { id: 1132, name: "Whisky Old Star", category: "Destilados", price: 20.00, desc: "Garrafa de Whisky Nacional", image: "", available: true },
-      { id: 1133, name: "Combo Old Star", category: "Combos", price: 40.00, desc: "1 Old Star + Energético 2L + Gelo", image: "", available: true },
-      { id: 1134, name: "Whisky Passport Scotch 1L", category: "Destilados", price: 55.00, desc: "Garrafa 1L", image: "", available: true },
-      { id: 1135, name: "Combo Passport + Vibe 2L", category: "Combos", price: 75.00, desc: "1 Passport 1L + Energético Vibe 2L + Gelo", image: "", available: true },
-      { id: 1136, name: "Combo Passport + Red Bull", category: "Combos", price: 105.00, desc: "1 Passport 1L + 4 Red Bull + Gelo", image: "", available: true },
-      { id: 1137, name: "Whisky Passport Maçã / Mel 670ml", category: "Destilados", price: 60.00, desc: "Saborizado Honey ou Green Apple", image: "", available: true, flavors: "Honey (Mel), Green Apple (Maçã Verde)" },
-      { id: 1138, name: "Combo Passport Maçã/Mel + Vibe", category: "Combos", price: 75.00, desc: "1 Passport Sabores + Energético 2L + Gelo", image: "", available: true },
-      { id: 1139, name: "Combo Passport Maçã/Mel + Red Bull", category: "Combos", price: 105.00, desc: "1 Passport Sabores + 4 Red Bull + Gelo", image: "", available: true },
-      { id: 1140, name: "Whisky Red Label 1L", category: "Destilados", price: 100.00, desc: "Johnnie Walker Red Label 1L", image: "", available: true },
-      { id: 1141, name: "Combo Red Label + Vibe 2L", category: "Combos", price: 125.00, desc: "1 Red Label 1L + Energético Vibe 2L + Gelo", image: "", available: true },
-      { id: 1142, name: "Combo Red Label + Red Bull", category: "Combos", price: 150.00, desc: "1 Red Label 1L + 4 Red Bull + Gelo de Coco", image: "", available: true }
+      { id: 101, name: "Água Mineral 1,5L", category: "Não Alcoólicos", price: 5.00, desc: "Garrafa 1,5L sem gás", image: IMG_AGUA, available: true },
+      { id: 102, name: "Água Mineral 500ml", category: "Não Alcoólicos", price: 2.50, desc: "Garrafa 500ml sem gás", image: IMG_AGUA, available: true },
+      { id: 103, name: "Água com Gás 500ml", category: "Não Alcoólicos", price: 4.00, desc: "Garrafa 500ml com gás", image: IMG_AGUA, available: true },
+      { id: 104, name: "H2OH! 500ml", category: "Não Alcoólicos", price: 8.00, desc: "Bebida levemente gaseificada", image: IMG_REFRI, available: true },
+      { id: 105, name: "Energético Bally 2L", category: "Gelos & Energéticos", price: 12.00, desc: "Garrafa 2L", image: IMG_ENERGETICO, available: true },
+      { id: 106, name: "Energético Long Night", category: "Gelos & Energéticos", price: 8.00, desc: "Lata energético", image: IMG_ENERGETICO, available: true },
+      { id: 107, name: "Energético Vibe", category: "Gelos & Energéticos", price: 10.00, desc: "Lata energético", image: IMG_ENERGETICO, available: true },
+      { id: 108, name: "Energético Monster", category: "Gelos & Energéticos", price: 12.00, desc: "Lata 473ml", image: IMG_ENERGETICO, available: true },
+      { id: 109, name: "Energético Red Bull 250ml", category: "Gelos & Energéticos", price: 12.00, desc: "Lata 250ml", image: IMG_ENERGETICO, available: true },
+      { id: 201, name: "Cachaça 51 1L", category: "Cachaças", price: 16.00, options: "Garrafa:16.00, Dose:4.00", desc: "Escolha entre Garrafa ou Dose", image: IMG_CACHACA, available: true },
+      { id: 202, name: "Aperol Aperitivo 750ml", category: "Cachaças", price: 60.00, desc: "Garrafa 750ml", image: IMG_CACHACA, available: true },
+      { id: 203, name: "Rum Bacardi Carta Blanca 1L", category: "Cachaças", price: 50.00, desc: "Garrafa 1L", image: IMG_CACHACA, available: true },
+      { id: 204, name: "Liqueur Bananinha 1L", category: "Cachaças", price: 45.00, desc: "Garrafa 1L", image: IMG_CACHACA, available: true },
+      { id: 205, name: "Campari Aperitivo 900ml", category: "Cachaças", price: 70.00, options: "Garrafa:70.00, Dose:10.00", desc: "Escolha entre Garrafa ou Dose", image: IMG_CACHACA, available: true },
+      { id: 206, name: "Cana Boa", category: "Cachaças", price: 3.00, desc: "Dose / Garrafinha", image: IMG_CACHACA, available: true },
+      { id: 207, name: "Canelinha Garrafa", category: "Cachaças", price: 18.00, desc: "Aperitivo de Canela Garrafa", image: IMG_CACHACA, available: true },
+      { id: 208, name: "Canelinha Copão", category: "Cachaças", price: 10.00, desc: "Copão preparado", image: IMG_COMBO, available: true },
+      { id: 209, name: "Combo Canelinha", category: "Combos", price: 38.00, desc: "Combo especial Canelinha", image: IMG_COMBO, available: true },
+      { id: 210, name: "Catuaba Selvagem 1L", category: "Cachaças", price: 18.00, desc: "Garrafa 1L", image: IMG_CACHACA, available: true },
+      { id: 211, name: "Vermouth Contini", category: "Cachaças", price: 35.00, options: "Garrafa:35.00, Meia Mão:5.00", desc: "Escolha entre Garrafa ou Meia Mão", image: IMG_CACHACA, available: true },
+      { id: 212, name: "Corote Flavored 500ml", category: "Cachaças", price: 6.00, desc: "Coquetel alcoólico", image: IMG_CACHACA, available: true, flavors: "Pêssego, Limão, Morango, Mirtilo, Baunilha" },
+      { id: 213, name: "Cynar Aperitivo", category: "Cachaças", price: 30.00, options: "Garrafa:30.00, Dose:5.00", desc: "Escolha entre Garrafa ou Dose", image: IMG_CACHACA, available: true },
+      { id: 214, name: "Conhaque Domecq 1L", category: "Cachaças", price: 45.00, options: "Garrafa:45.00, Dose:7.00", desc: "Escolha entre Garrafa ou Dose", image: IMG_CACHACA, available: true },
+      { id: 215, name: "Conhaque Dreher 900ml", category: "Cachaças", price: 26.00, options: "Garrafa:26.00, Dose:4.00", desc: "Escolha entre Garrafa ou Dose", image: IMG_CACHACA, available: true },
+      { id: 216, name: "Duelo Tradicional", category: "Cachaças", price: 3.50, desc: "Coquetel alcoólico", image: IMG_CACHACA, available: true },
+      { id: 217, name: "Duelo Sabores", category: "Cachaças", price: 4.00, desc: "Sabores variados", image: IMG_CACHACA, available: true },
+      { id: 218, name: "Gnutre Tradicional", category: "Cachaças", price: 15.00, desc: "Garrafa", image: IMG_CACHACA, available: true },
+      { id: 219, name: "Gnutre Groselha", category: "Cachaças", price: 12.00, desc: "Sabor Groselha", image: IMG_CACHACA, available: true },
+      { id: 220, name: "Gin Golf", category: "Cachaças", price: 35.00, options: "Garrafa:35.00, Dose:5.00", desc: "Escolha entre Garrafa ou Dose", image: IMG_CACHACA, available: true },
+      { id: 221, name: "Jurupinga 970ml", category: "Cachaças", price: 35.00, desc: "Vinho Suave Composto", image: IMG_VINHO, available: true },
+      { id: 222, name: "Cachaça Kariri", category: "Cachaças", price: 22.00, options: "Garrafa:22.00, Dose:7.00", desc: "Escolha entre Garrafa ou Dose", image: IMG_CACHACA, available: true },
+      { id: 223, name: "Rum Montilla Carta Branca", category: "Cachaças", price: 45.00, desc: "Garrafa 1L", image: IMG_CACHACA, available: true },
+      { id: 224, name: "Aperitivo Para Tudo", category: "Cachaças", price: 16.00, options: "Garrafa:16.00, Dose:4.00", desc: "Escolha entre Garrafa ou Dose", image: IMG_CACHACA, available: true },
+      { id: 225, name: "Pararine", category: "Cachaças", price: 18.00, desc: "Garrafa aperitivo", image: IMG_CACHACA, available: true },
+      { id: 226, name: "Pitu 1L Tradicional", category: "Cachaças", price: 18.00, desc: "Cachaça Pitu Garrafa 1L", image: IMG_CACHACA, available: true },
+      { id: 227, name: "Pitu Banana", category: "Cachaças", price: 7.00, desc: "Garrafinha saborizada", image: IMG_CACHACA, available: true },
+      { id: 228, name: "Pitu Limão", category: "Cachaças", price: 6.00, desc: "Garrafinha saborizada", image: IMG_CACHACA, available: true },
+      { id: 229, name: "Pitu Caju", category: "Cachaças", price: 7.00, desc: "Garrafinha saborizada", image: IMG_CACHACA, available: true },
+      { id: 230, name: "Pitu Lata 350ml", category: "Cachaças", price: 6.00, desc: "Lata 350ml", image: IMG_CACHACA, available: true },
+      { id: 231, name: "Cabaré Prata", category: "Cachaças", price: 54.00, desc: "Cachaça Cabaré Extra Premium Prata", image: IMG_CACHACA, available: true },
+      { id: 232, name: "Cabaré Ouro", category: "Cachaças", price: 52.00, desc: "Cachaça Cabaré Ouro Envelhecida", image: IMG_CACHACA, available: true },
+      { id: 233, name: "Cabaré Amburana", category: "Cachaças", price: 65.00, desc: "Armazenada em tonéis de Amburana", image: IMG_CACHACA, available: true },
+      { id: 234, name: "Cabaré Fire", category: "Cachaças", price: 70.00, desc: "Cachaça com Canela", image: IMG_CACHACA, available: true },
+      { id: 235, name: "Conhaque Presidente", category: "Cachaças", price: 20.00, options: "Garrafa:20.00, Dose:4.00", desc: "Escolha entre Garrafa ou Dose", image: IMG_CACHACA, available: true },
+      { id: 236, name: "Saquê Culinário / Bebida", category: "Cachaças", price: 25.00, desc: "Garrafa Saquê Azuma Kirin", image: IMG_CACHACA, available: true },
+      { id: 237, name: "Aperitivo São Francisco", category: "Cachaças", price: 32.00, options: "Garrafa:32.00, Dose:5.00", desc: "Escolha entre Garrafa ou Dose", image: IMG_CACHACA, available: true },
+      { id: 238, name: "Conhaque São João da Barra", category: "Cachaças", price: 30.00, desc: "Garrafa", image: IMG_CACHACA, available: true },
+      { id: 239, name: "Cachaça Seleta 1L", category: "Cachaças", price: 50.00, desc: "Cachaça Artesanal Ouro", image: IMG_CACHACA, available: true },
+      { id: 240, name: "Velho Barreiro 910ml", category: "Cachaças", price: 16.00, options: "Garrafa:16.00, Dose:4.00", desc: "Escolha entre Garrafa ou Dose", image: IMG_CACHACA, available: true },
+      { id: 241, name: "Cachaça Ypióca Ouro / Prata", category: "Cachaças", price: 50.00, desc: "Garrafa com Palha", image: IMG_CACHACA, available: true },
+      { id: 301, name: "Cerveja Amstel (Fardo / Lata)", category: "Cervejas", price: 37.00, options: "Fardo:37.00, Lata Solta:4.00", desc: "Escolha Fardo ou Lata Solta", image: IMG_CERVEJA, available: true },
+      { id: 302, name: "Cerveja Brahma 269ml", category: "Cervejas", price: 46.00, options: "Fardo:46.00, Lata Solta:4.50", desc: "Escolha Fardo ou Lata Solta", image: IMG_CERVEJA, available: true },
+      { id: 303, name: "Cerveja Brahma 350ml", category: "Cervejas", price: 48.00, options: "Fardo:48.00, Lata Solta:5.00", desc: "Escolha Fardo ou Lata Solta", image: IMG_CERVEJA, available: true },
+      { id: 304, name: "Cerveja Budweiser Pack 8 Unid", category: "Cervejas", price: 28.00, options: "Pack 8 Unidades:28.00, Lata Solta:3.50", desc: "Escolha Pack ou Lata Solta", image: IMG_CERVEJA, available: true },
+      { id: 305, name: "Cerveja Budweiser Pack 15 Unid", category: "Cervejas", price: 52.00, options: "Pack 15 Unidades:52.00, Lata Solta:3.50", desc: "Escolha Pack ou Lata Solta", image: IMG_CERVEJA, available: true },
+      { id: 306, name: "Cerveja Heineken (Fardo / Lata)", category: "Cervejas", price: 38.00, options: "Fardo:38.00, Lata Solta:5.00", desc: "Escolha Fardo ou Lata Solta", image: IMG_CERVEJA, available: true },
+      { id: 307, name: "Cerveja Império (Fardo / Lata)", category: "Cervejas", price: 50.00, options: "Fardo:50.00, Lata Solta:4.00", desc: "Escolha Fardo ou Lata Solta", image: IMG_CERVEJA, available: true },
+      { id: 308, name: "Cerveja Itaipava 350ml (Fardo)", category: "Cervejas", price: 40.00, options: "Fardo:40.00, Lata Solta:3.50", desc: "Escolha Fardo ou Lata Solta", image: IMG_CERVEJA, available: true },
+      { id: 309, name: "Cerveja Itaipava Zero Álcool (Fardo)", category: "Cervejas", price: 60.00, options: "Fardo:60.00, Lata Solta:5.50", desc: "Escolha Fardo ou Lata Solta", image: IMG_CERVEJA, available: true },
+      { id: 310, name: "Cerveja Skol Pack 15 Unid", category: "Cervejas", price: 55.00, options: "Pack 15 Unidades:55.00, Lata Solta:4.00", desc: "Escolha Pack ou Lata Solta", image: IMG_CERVEJA, available: true },
+      { id: 311, name: "Cerveja Skol Pack 8 Unid", category: "Cervejas", price: 32.00, options: "Pack 8 Unidades:32.00, Lata Solta:4.00", desc: "Escolha Pack ou Lata Solta", image: IMG_CERVEJA, available: true },
+      { id: 312, name: "Cerveja Petra (Fardo / Lata)", category: "Cervejas", price: 34.00, options: "Fardo:34.00, Lata Solta:3.00", desc: "Escolha Fardo ou Lata Solta", image: IMG_CERVEJA, available: true },
+      { id: 313, name: "Cerveja Skol (Fardo / Lata)", category: "Cervejas", price: 42.00, options: "Fardo:42.00, Lata Solta:3.50", desc: "Escolha Fardo ou Lata Solta", image: IMG_CERVEJA, available: true },
+      { id: 314, name: "Cerveja Spaten (Fardo / Lata)", category: "Cervejas", price: 36.00, options: "Fardo:36.00, Lata Solta:5.00", desc: "Escolha Fardo ou Lata Solta", image: IMG_CERVEJA, available: true },
+      { id: 315, name: "Long Neck Budweiser (Fardo c/ 6)", category: "Cervejas", price: 48.00, options: "Fardo c/ 6:48.00, Solta:8.00", desc: "Escolha Fardo ou Unidade", image: IMG_LONGNECK, available: true },
+      { id: 316, name: "Long Neck Corona 330ml", category: "Cervejas", price: 8.00, desc: "Unidade Long Neck", image: IMG_LONGNECK, available: true },
+      { id: 317, name: "Long Neck Corona Zero", category: "Cervejas", price: 8.50, desc: "Unidade Long Neck Sem Álcool", image: IMG_LONGNECK, available: true },
+      { id: 318, name: "Long Neck Spaten", category: "Cervejas", price: 8.00, desc: "Unidade Long Neck", image: IMG_LONGNECK, available: true },
+      { id: 319, name: "Long Neck Stella Artois", category: "Cervejas", price: 8.00, desc: "Unidade Long Neck 330ml", image: IMG_LONGNECK, available: true },
+      { id: 320, name: "Long Neck Heineken 330ml", category: "Cervejas", price: 8.00, desc: "Unidade Long Neck", image: IMG_LONGNECK, available: true },
+      { id: 321, name: "Long Neck Heineken Zero 330ml", category: "Cervejas", price: 8.50, desc: "Unidade Long Neck Sem Álcool", image: IMG_LONGNECK, available: true },
+      { id: 322, name: "Skol Beats Long Neck / Lata", category: "Cervejas", price: 10.00, desc: "Sabor Secret/Senses/150bpm", image: IMG_LONGNECK, available: true },
+      { id: 323, name: "Smirnoff Ice Long Neck 275ml", category: "Cervejas", price: 10.00, desc: "Bebida mista refrescante", image: IMG_LONGNECK, available: true },
+      { id: 324, name: "Xeque-Mate Lata 355ml", category: "Cervejas", price: 10.00, desc: "Chá mate, rum, guaraná e limão", image: IMG_CERVEJA, available: true },
+      { id: 401, name: "Gin Beefeater Laranja 750ml", category: "Destilados", price: 200.00, desc: "Gin Beefeater Blood Orange", image: IMG_CACHACA, available: true },
+      { id: 402, name: "Combo Gin Beefeater Laranja", category: "Combos", price: 240.00, desc: "1 Beefeater Laranja + Energéticos + Gelo de Sabor", image: IMG_COMBO, available: true },
+      { id: 403, name: "Gin Beefeater Sabores 750ml", category: "Destilados", price: 140.00, desc: "Beefeater Pink / Lemon", image: IMG_CACHACA, available: true },
+      { id: 404, name: "Combo Gin Beefeater Sabores", category: "Combos", price: 190.00, options: "Combo Garrafa:190.00, Copão Preparado:40.00", desc: "Escolha Garrafa Combo ou Copão", image: IMG_COMBO, available: true },
+      { id: 405, name: "Gin Beefeater Tradicional 750ml", category: "Destilados", price: 120.00, desc: "London Dry 750ml", image: IMG_CACHACA, available: true },
+      { id: 406, name: "Combo Gin Beefeater Tradicional", category: "Combos", price: 160.00, options: "Combo Garrafa:160.00, Copão Preparado:35.00", desc: "Escolha Garrafa Combo ou Copão", image: IMG_COMBO, available: true },
+      { id: 407, name: "Gin Bombay Sapphire 750ml", category: "Destilados", price: 120.00, desc: "London Dry Importado", image: IMG_CACHACA, available: true },
+      { id: 408, name: "Combo Gin Bombay Sapphire", category: "Combos", price: 165.00, desc: "1 Bombay Sapphire + Energéticos + Gelo", image: IMG_COMBO, available: true },
+      { id: 409, name: "Gin Eternity 900ml", category: "Destilados", price: 30.00, desc: "Garrafa de Gin", image: IMG_CACHACA, available: true },
+      { id: 410, name: "Combo Gin Eternity", category: "Combos", price: 50.00, desc: "1 Eternity + Energético 2L + Gelo Saborizado", image: IMG_COMBO, available: true },
+      { id: 411, name: "Gin Gordon's London Dry 750ml", category: "Destilados", price: 80.00, desc: "Garrafa 750ml", image: IMG_CACHACA, available: true },
+      { id: 412, name: "Combo Gin Gordon's", category: "Combos", price: 125.00, desc: "1 Gordon's + Energéticos + Gelo", image: IMG_COMBO, available: true },
+      { id: 413, name: "Gin Kiryos", category: "Destilados", price: 20.00, desc: "Garrafa de Gin Kiryos", image: IMG_CACHACA, available: true },
+      { id: 414, name: "Combo Gin Kiryos", category: "Combos", price: 40.00, desc: "1 Gin Kiryos + Energético 2L", image: IMG_COMBO, available: true },
+      { id: 415, name: "Gin Rock's 1L", category: "Destilados", price: 40.00, desc: "Garrafa 1L", image: IMG_CACHACA, available: true },
+      { id: 416, name: "Combo Gin Rock's", category: "Combos", price: 60.00, desc: "1 Gin Rock's + Energético 2L + Gelo", image: IMG_COMBO, available: true },
+      { id: 417, name: "Gin Tanqueray Sabores 750ml", category: "Destilados", price: 165.00, desc: "Sevilla / Royale / Rangpur", image: IMG_CACHACA, available: true },
+      { id: 418, name: "Combo Gin Tanqueray Sabores", category: "Combos", price: 205.00, desc: "1 Tanqueray Sabores + Red Bull + Gelo", image: IMG_COMBO, available: true },
+      { id: 419, name: "Gin Tanqueray Tradicional 750ml", category: "Destilados", price: 120.00, desc: "London Dry Importado", image: IMG_CACHACA, available: true },
+      { id: 420, name: "Combo Gin Tanqueray Tradicional", category: "Combos", price: 165.00, desc: "1 Tanqueray Tradicional + Red Bull + Gelo", image: IMG_COMBO, available: true },
+      { id: 501, name: "Licor 43 Chocolate 700ml", category: "Destilados", price: 190.00, desc: "Licor 43 Chocolate Espanha", image: IMG_CACHACA, available: true },
+      { id: 502, name: "Licor 43 Edição Espanha", category: "Destilados", price: 220.00, desc: "Edição Especial Espanha 700ml", image: IMG_CACHACA, available: true },
+      { id: 503, name: "Licor 43 Orchata / Barista", category: "Destilados", price: 210.00, desc: "Edição Especial Orchata ou Barista", image: IMG_CACHACA, available: true },
+      { id: 504, name: "Licor 43 Tradicional 700ml", category: "Destilados", price: 165.00, desc: "Diego Zamora Licor 43 Espanhol", image: IMG_CACHACA, available: true },
+      { id: 505, name: "Licor Ballena Morango com Creme", category: "Destilados", price: 160.00, desc: "Tequila com Creme de Morango", image: IMG_CACHACA, available: true },
+      { id: 506, name: "Licor Ballena Chocolate", category: "Destilados", price: 175.00, desc: "Edição Especial Chocolate", image: IMG_CACHACA, available: true },
+      { id: 507, name: "Licor Ballena Coco", category: "Destilados", price: 175.00, desc: "Edição Especial Coco", image: IMG_CACHACA, available: true },
+      { id: 508, name: "Licor Bem Casado", category: "Destilados", price: 55.00, desc: "Garrafa Licor Bem Casado", image: IMG_CACHACA, available: true },
+      { id: 509, name: "Licor Don Luiz", category: "Destilados", price: 90.00, desc: "Licor Doce de Leite", image: IMG_CACHACA, available: true },
+      { id: 510, name: "Licor Malibu Rum de Coco 750ml", category: "Destilados", price: 70.00, desc: "Rum Caribenho com Coco", image: IMG_CACHACA, available: true },
+      { id: 511, name: "Combo Malibu", category: "Combos", price: 100.00, desc: "1 Malibu + Suco ou Energético", image: IMG_COMBO, available: true },
+      { id: 512, name: "Licor Peachtree Pêssego", category: "Destilados", price: 170.00, desc: "Licor fino de Pêssego", image: IMG_CACHACA, available: true },
+      { id: 513, name: "Espumante Chandon Brut / Passion", category: "Vinhos", price: 120.00, desc: "Garrafa Espumante 750ml", image: IMG_VINHO, available: true },
+      { id: 601, name: "Coca-Cola 2L", category: "Não Alcoólicos", price: 14.00, desc: "Garrafa PET 2 Litros", image: IMG_REFRI, available: true },
+      { id: 602, name: "Coca-Cola Retornável (C/ Troca)", category: "Não Alcoólicos", price: 8.50, desc: "Com a entrega do casco vazio", image: IMG_REFRI, available: true },
+      { id: 603, name: "Coca-Cola Retornável (Sem Casco)", category: "Não Alcoólicos", price: 14.00, desc: "Incluso valor do garrafão", image: IMG_REFRI, available: true },
+      { id: 604, name: "Guaraná Dolly 2L", category: "Não Alcoólicos", price: 7.00, desc: "Garrafa 2 Litros", image: IMG_REFRI, available: true },
+      { id: 605, name: "Fanta Laranja / Uva 2L", category: "Não Alcoólicos", price: 12.00, desc: "Garrafa 2 Litros", image: IMG_REFRI, available: true },
+      { id: 606, name: "Guaraná Antarctica 2L", category: "Não Alcoólicos", price: 12.00, desc: "Garrafa 2 Litros", image: IMG_REFRI, available: true },
+      { id: 607, name: "Sprite 2L", category: "Não Alcoólicos", price: 12.00, desc: "Garrafa 2 Litros", image: IMG_REFRI, available: true },
+      { id: 608, name: "Sukita Laranja 2L", category: "Não Alcoólicos", price: 8.00, desc: "Garrafa 2 Litros", image: IMG_REFRI, available: true },
+      { id: 609, name: "Tubaína 2L", category: "Não Alcoólicos", price: 7.00, desc: "Garrafa 2 Litros", image: IMG_REFRI, available: true },
+      { id: 610, name: "Refrigerante Lata (Variados)", category: "Não Alcoólicos", price: 5.00, desc: "Lata 350ml (Coca, Guaraná, Fanta, Sprite)", image: IMG_REFRI, available: true },
+      { id: 611, name: "Suco Del Valle 1L", category: "Não Alcoólicos", price: 12.00, desc: "Caixa 1L", image: IMG_REFRI, available: true },
+      { id: 612, name: "Suco Del Valle Lata", category: "Não Alcoólicos", price: 6.00, desc: "Lata 290ml", image: IMG_REFRI, available: true },
+      { id: 613, name: "Gatorade 500ml", category: "Não Alcoólicos", price: 8.00, desc: "Isotónico 500ml", image: IMG_REFRI, available: true },
+      { id: 614, name: "Suco Prats 900ml", category: "Não Alcoólicos", price: 14.00, desc: "Suco 100% Integral", image: IMG_REFRI, available: true },
+      { id: 700, name: "Alumínio Narguile (Unidade Solta)", category: "Tabacaria", price: 0.50, desc: "Folha solta de alumínio para narguile", image: IMG_TABACARIA, available: true },
+      { id: 701, name: "Alumínio Narguile (Caixa/Rolo)", category: "Tabacaria", price: 20.00, desc: "Rolo ou Caixa fechada", image: IMG_TABACARIA, available: true },
+      { id: 702, name: "Borracha de Rosh", category: "Tabacaria", price: 5.00, desc: "Vedação para rosh", image: IMG_TABACARIA, available: true },
+      { id: 703, name: "Borracha de Mangueira", category: "Tabacaria", price: 5.00, desc: "Vedação mangueira", image: IMG_TABACARIA, available: true },
+      { id: 704, name: "Borracha de Vaso", category: "Tabacaria", price: 8.00, desc: "Vedação vaso narguile", image: IMG_TABACARIA, available: true },
+      { id: 705, name: "Carvão para Narguile 1kg", category: "Tabacaria", price: 40.00, desc: "Carvão de coco 1kg", image: IMG_TABACARIA, available: true },
+      { id: 706, name: "Carvão para Narguile 500g", category: "Tabacaria", price: 35.00, desc: "Carvão de coco 500g", image: IMG_TABACARIA, available: true },
+      { id: 707, name: "Carvão Solto", category: "Tabacaria", price: 1.00, desc: "Unidade do carvão", image: IMG_TABACARIA, available: true },
+      { id: 708, name: "Cuia de Silicone", category: "Tabacaria", price: 9.00, desc: "Cuia para preparo", image: IMG_TABACARIA, available: true },
+      { id: 709, name: "Dixavador", category: "Tabacaria", price: 5.00, desc: "Triturador de ervas", image: IMG_TABACARIA, available: true },
+      { id: 710, name: "Forninho Acendedor a Gás", category: "Tabacaria", price: 120.00, desc: "Acendedor portátil", image: IMG_TABACARIA, available: true },
+      { id: 711, name: "Refil de Gás", category: "Tabacaria", price: 35.00, desc: "Lata de gás refil", image: IMG_TABACARIA, available: true },
+      { id: 712, name: "Forninho Elétrico Médio", category: "Tabacaria", price: 40.00, desc: "Acendedor elétrico", image: IMG_TABACARIA, available: true },
+      { id: 713, name: "Forninho Elétrico Pequeno", category: "Tabacaria", price: 30.00, desc: "Acendedor elétrico", image: IMG_TABACARIA, available: true },
+      { id: 714, name: "Isqueiro Bic / Tradicional", category: "Tabacaria", price: 3.00, desc: "Unidade", image: IMG_TABACARIA, available: true },
+      { id: 715, name: "Rosh de Cerâmica / Silicone", category: "Tabacaria", price: 25.00, desc: "Queimador narguile", image: IMG_TABACARIA, available: true },
+      { id: 716, name: "Prato para Narguile", category: "Tabacaria", price: 20.00, desc: "Prato de alumínio", image: IMG_TABACARIA, available: true },
+      { id: 717, name: "Piteira Pequena", category: "Tabacaria", price: 5.00, desc: "Piteira higiênica", image: IMG_TABACARIA, available: true },
+      { id: 718, name: "Piteira Longa", category: "Tabacaria", price: 6.00, desc: "Piteira higiênica longa", image: IMG_TABACARIA, available: true },
+      { id: 719, name: "Seda Zomo", category: "Tabacaria", price: 5.00, options: "Livreto:5.00, Solta:0.50", desc: "Escolha Livreto ou Folha Solta", image: IMG_TABACARIA, available: true },
+      { id: 720, name: "Seda Sadhu Tradicional", category: "Tabacaria", price: 6.00, desc: "Livreto de seda", image: IMG_TABACARIA, available: true },
+      { id: 721, name: "Seda Sadhu Longa", category: "Tabacaria", price: 8.00, desc: "Livreto King Size", image: IMG_TABACARIA, available: true },
+      { id: 722, name: "Tabaco Crema", category: "Tabacaria", price: 17.00, desc: "Pacote de tabaco", image: IMG_TABACARIA, available: true },
+      { id: 723, name: "Tabaco Amsterdam", category: "Tabacaria", price: 17.00, desc: "Pacote de tabaco 25g", image: IMG_TABACARIA, available: true },
+      { id: 724, name: "Tabaco Tabaquin", category: "Tabacaria", price: 17.00, desc: "Pacote de tabaco", image: IMG_TABACARIA, available: true },
+      { id: 725, name: "Tesoura para Tabaco", category: "Tabacaria", price: 15.00, desc: "Tesourinha de mola", image: IMG_TABACARIA, available: true },
+      { id: 726, name: "Vaso de Narguile Grande", category: "Tabacaria", price: 80.00, desc: "Vaso de vidro grande", image: IMG_TABACARIA, available: true },
+      { id: 727, name: "Vaso de Narguile Pequeno", category: "Tabacaria", price: 35.00, desc: "Vaso de vidro pequeno", image: IMG_TABACARIA, available: true },
+      { id: 728, name: "Essência Ziggy", category: "Tabacaria", price: 12.00, desc: "Caixinha 50g", image: IMG_TABACARIA, available: true, flavors: "Melancia, Menta, Tropical, Banana, Maçã Verde, Morango" },
+      { id: 729, name: "Essência Primal", category: "Tabacaria", price: 12.00, desc: "Caixinha 50g", image: IMG_TABACARIA, available: true, flavors: "Melancia Ice, Menta, Chiclete" },
+      { id: 730, name: "Essência Zomo", category: "Tabacaria", price: 11.00, desc: "Caixinha 50g", image: IMG_TABACARIA, available: true, flavors: "Strong Mint, Splash Lemon, Swiss Alps, Blue Wave" },
+      { id: 731, name: "Essência Adalya", category: "Tabacaria", price: 18.00, desc: "Caixinha 50g Premium", image: IMG_TABACARIA, available: true, flavors: "Love 66, Lady Killer, Menta, Uva" },
+      { id: 732, name: "Essência Haze", category: "Tabacaria", price: 20.00, desc: "Caixinha 50g Premium", image: IMG_TABACARIA, available: true },
+      { id: 733, name: "Essência Nay", category: "Tabacaria", price: 13.00, desc: "Caixinha 50g", image: IMG_TABACARIA, available: true, flavors: "Cinnamon, Melon, Passiflora, Fresh Watermelon" },
+      { id: 734, name: "Essência Magic", category: "Tabacaria", price: 13.00, desc: "Caixinha 50g", image: IMG_TABACARIA, available: true },
+      { id: 735, name: "Essência Lucky", category: "Tabacaria", price: 13.00, desc: "Caixinha 50g", image: IMG_TABACARIA, available: true },
+      { id: 736, name: "Essência Onix", category: "Tabacaria", price: 13.00, desc: "Caixinha 50g", image: IMG_TABACARIA, available: true },
+      { id: 801, name: "Tequila Jose Cuervo Ouro 750ml", category: "Destilados", price: 120.00, desc: "Jose Cuervo Especial Reposado", image: IMG_CACHACA, available: true },
+      { id: 802, name: "Tequila Jose Cuervo Prata 750ml", category: "Destilados", price: 110.00, desc: "Jose Cuervo Especial Silver", image: IMG_CACHACA, available: true },
+      { id: 803, name: "Tequi Loka", category: "Destilados", price: 35.00, desc: "Coquetel de tequila", image: IMG_CACHACA, available: true },
+      { id: 804, name: "Tequi Love", category: "Destilados", price: 38.00, desc: "Coquetel alcoólico com tequila", image: IMG_CACHACA, available: true },
+      { id: 901, name: "Vinho Bella Aurora Suave", category: "Vinhos", price: 18.00, desc: "Vinho de Mesa Suave", image: IMG_VINHO, available: true },
+      { id: 902, name: "Vinho Bella Aurora Seco", category: "Vinhos", price: 19.00, desc: "Vinho de Mesa Seco", image: IMG_VINHO, available: true },
+      { id: 903, name: "Cantinho do Valle 500ml", category: "Vinhos", price: 6.00, desc: "Coquetel de Vinho", image: IMG_VINHO, available: true },
+      { id: 904, name: "Vinho Dom Bosco Suave 750ml", category: "Vinhos", price: 18.00, desc: "Vinho Tinto Suave", image: IMG_VINHO, available: true },
+      { id: 905, name: "Vinho Dom Bosco Seco 750ml", category: "Vinhos", price: 19.00, desc: "Vinho Tinto Seco", image: IMG_VINHO, available: true },
+      { id: 906, name: "Chopp de Vinho Draft 600ml", category: "Vinhos", price: 12.00, desc: "Garrafa Draft Chopp de Vinho", image: IMG_VINHO, available: true },
+      { id: 907, name: "Vinho Pergola Suave 1L", category: "Vinhos", price: 25.00, desc: "Vinho Tinto Suave 1L", image: IMG_VINHO, available: true },
+      { id: 908, name: "Vinho Pergola Seco 1L", category: "Vinhos", price: 26.00, desc: "Vinho Tinto Seco 1L", image: IMG_VINHO, available: true },
+      { id: 909, name: "Vinho Santomé Suave", category: "Vinhos", price: 22.00, desc: "Garrafa Suave", image: IMG_VINHO, available: true },
+      { id: 910, name: "Vinho Santomé Seco", category: "Vinhos", price: 23.00, desc: "Garrafa Seco", image: IMG_VINHO, available: true },
+      { id: 1001, name: "Vodka Absolut Tradicional 1L", category: "Destilados", price: 100.00, desc: "Garrafa 1L Sueca Importada", image: IMG_VODKA, available: true },
+      { id: 1002, name: "Combo Vodka Absolut Tradicional", category: "Combos", price: 150.00, desc: "1 Absolut 1L + Energéticos + Gelo de Sabor", image: IMG_COMBO, available: true },
+      { id: 1003, name: "Vodka Absolut Sabores 1L", category: "Destilados", price: 95.00, desc: "Vanilla / Apeach / Mango / Watermelon", image: IMG_VODKA, available: true, flavors: "Vanilla, Apeach, Mango, Watermelon" },
+      { id: 1004, name: "Combo Vodka Absolut Sabores", category: "Combos", price: 140.00, desc: "1 Absolut Sabores + Energéticos + Gelo", image: IMG_COMBO, available: true },
+      { id: 1005, name: "Vodka Askov 900ml", category: "Destilados", price: 18.00, desc: "Garrafa Tradicional / Sabores", image: IMG_VODKA, available: true, flavors: "Tradicional, Frutas Vermelhas, Maracujá, Limão, Mirtilo" },
+      { id: 1006, name: "Vodka Balalaika 1L", category: "Destilados", price: 17.00, desc: "Garrafa 1L", image: IMG_VODKA, available: true },
+      { id: 1007, name: "Vodka Cîroc Red Berry 750ml", category: "Destilados", price: 250.00, desc: "Ultra Premium Francesa", image: IMG_VODKA, available: true },
+      { id: 1008, name: "Combo Cîroc Red Berry", category: "Combos", price: 290.00, desc: "1 Cîroc Red Berry + 5 Red Bull + Gelo", image: IMG_COMBO, available: true },
+      { id: 1009, name: "Vodka Cîroc Sabores 750ml", category: "Destilados", price: 350.00, desc: "Peach / Coconut / Mango", image: IMG_VODKA, available: true, flavors: "Peach, Coconut, Mango" },
+      { id: 1010, name: "Combo Cîroc Sabores", category: "Combos", price: 400.00, desc: "1 Cîroc Sabores + 5 Red Bull + Gelo", image: IMG_COMBO, available: true },
+      { id: 1011, name: "Vodka Grey Goose Tradicional 750ml", category: "Destilados", price: 155.00, desc: "Ultra Premium Francesa", image: IMG_VODKA, available: true },
+      { id: 1012, name: "Combo Grey Goose Tradicional", category: "Combos", price: 205.00, desc: "1 Grey Goose + 5 Red Bull + Gelo", image: IMG_COMBO, available: true },
+      { id: 1013, name: "Vodka Grey Goose Sabores 750ml", category: "Destilados", price: 180.00, desc: "L'Orange / La Poire", image: IMG_VODKA, available: true, flavors: "L'Orange, La Poire" },
+      { id: 1014, name: "Combo Grey Goose Sabores", category: "Combos", price: 230.00, desc: "1 Grey Goose Sabores + Red Bull + Gelo", image: IMG_COMBO, available: true },
+      { id: 1015, name: "Vodka Intencion 900ml", category: "Destilados", price: 15.00, desc: "Garrafa de Vodka", image: IMG_VODKA, available: true },
+      { id: 1016, name: "Vodka Smirnoff 998ml", category: "Destilados", price: 45.00, desc: "Garrafa No 21", image: IMG_VODKA, available: true },
+      { id: 1017, name: "Combo Smirnoff + Energético Vibe", category: "Combos", price: 75.00, desc: "1 Smirnoff 1L + 1 Energético Vibe 2L + Gelo", image: IMG_COMBO, available: true },
+      { id: 1018, name: "Combo Smirnoff + Red Bull", category: "Combos", price: 100.00, desc: "1 Smirnoff 1L + 4 Red Bull 250ml + Gelo", image: IMG_COMBO, available: true },
+      { id: 1101, name: "Whisky Ballantine's Finest 1L", category: "Destilados", price: 85.00, desc: "Whisky Escocês 1L", image: IMG_CACHACA, available: true },
+      { id: 1102, name: "Combo Ballantine's + Vibe 2L", category: "Combos", price: 105.00, desc: "1 Ballantine's Finest + Energético Vibe 2L + Gelo", image: IMG_COMBO, available: true },
+      { id: 1103, name: "Combo Ballantine's + Red Bull", category: "Combos", price: 130.00, desc: "1 Ballantine's Finest + 4 Red Bull + Gelo", image: IMG_COMBO, available: true },
+      { id: 1104, name: "Whisky Ballantine's 12 Anos 1L", category: "Destilados", price: 160.00, desc: "Garrafa 1L 12 Anos", image: IMG_CACHACA, available: true },
+      { id: 1105, name: "Combo Ballantine's 12 Anos", category: "Combos", price: 200.00, desc: "1 Ballantine's 12A + Red Bull + Gelo de Sabor", image: IMG_COMBO, available: true },
+      { id: 1106, name: "Whisky Ballantine's Wild / Abacaxi 1L", category: "Destilados", price: 95.00, desc: "Whisky Saborizado Abacaxi", image: IMG_CACHACA, available: true },
+      { id: 1107, name: "Combo Ballantine's Abacaxi + Vibe", category: "Combos", price: 125.00, desc: "1 Ballantine's Abacaxi + Energético 2L + Gelo", image: IMG_COMBO, available: true },
+      { id: 1108, name: "Combo Ballantine's Abacaxi + Red Bull", category: "Combos", price: 145.00, desc: "1 Ballantine's Abacaxi + 4 Red Bull + Gelo de Coco", image: IMG_COMBO, available: true },
+      { id: 1109, name: "Whisky Johnnie Walker Black Label 1L", category: "Destilados", price: 195.00, desc: "Whisky Escocês 12 Anos 1L", image: IMG_CACHACA, available: true },
+      { id: 1110, name: "Combo Black Label", category: "Combos", price: 235.00, desc: "1 Black Label 1L + 4 Red Bull + Gelo de Sabor", image: IMG_COMBO, available: true },
+      { id: 1111, name: "Whisky Double Black Label 1L", category: "Destilados", price: 285.00, desc: "Johnnie Walker Double Black 1L", image: IMG_CACHACA, available: true },
+      { id: 1112, name: "Combo Double Black Label", category: "Combos", price: 330.00, desc: "1 Double Black + 5 Red Bull + Gelo de Sabor", image: IMG_COMBO, available: true },
+      { id: 1113, name: "Whisky Buchanan's 12 Anos 1L", category: "Destilados", price: 210.00, desc: "Whisky Escocês 1L", image: IMG_CACHACA, available: true },
+      { id: 1114, name: "Combo Buchanan's 12 Anos", category: "Combos", price: 250.00, desc: "1 Buchanan's + 4 Red Bull + Gelo de Coco", image: IMG_COMBO, available: true },
+      { id: 1115, name: "Whisky White Horse (Cavalo Branco) 1L", category: "Destilados", price: 80.00, desc: "Garrafa 1L", image: IMG_CACHACA, available: true },
+      { id: 1116, name: "Combo Cavalo Branco + Vibe", category: "Combos", price: 100.00, desc: "1 Cavalo Branco 1L + Energético Vibe 2L + Gelo", image: IMG_COMBO, available: true },
+      { id: 1117, name: "Combo Cavalo Branco + Red Bull", category: "Combos", price: 120.00, desc: "1 Cavalo Branco 1L + 4 Red Bull + Gelo", image: IMG_COMBO, available: true },
+      { id: 1118, name: "Whisky Chanceler 1L", category: "Destilados", price: 20.00, desc: "Garrafa 1L", image: IMG_CACHACA, available: true },
+      { id: 1119, name: "Combo Chanceler + Energético 2L", category: "Combos", price: 40.00, desc: "1 Chanceler 1L + Energético 2L + Gelo", image: IMG_COMBO, available: true },
+      { id: 1120, name: "Whisky Chivas Regal 12 Anos 1L", category: "Destilados", price: 170.00, desc: "Whisky Escocês Premium", image: IMG_CACHACA, available: true },
+      { id: 1121, name: "Combo Chivas Regal 12 Anos", category: "Combos", price: 210.00, desc: "1 Chivas Regal + 4 Red Bull + Gelo", image: IMG_COMBO, available: true },
+      { id: 1122, name: "Whisky Gold Label Reserve 750ml", category: "Destilados", price: 300.00, desc: "Garrafa 750ml", image: IMG_CACHACA, available: true },
+      { id: 1123, name: "Combo Gold Label Reserve", category: "Combos", price: 350.00, desc: "1 Gold Label + 5 Red Bull + Gelo de Sabor", image: IMG_COMBO, available: true },
+      { id: 1124, name: "Whisky Jack Daniel's N° 7 1L", category: "Destilados", price: 165.00, desc: "Tennessee Whiskey 1L", image: IMG_CACHACA, available: true },
+      { id: 1125, name: "Combo Jack Daniel's N° 7", category: "Combos", price: 210.00, desc: "1 Jack N° 7 + 4 Red Bull + Gelo de Coco", image: IMG_COMBO, available: true },
+      { id: 1126, name: "Whisky Jack Daniel's Fire / Honey 1L", category: "Destilados", price: 175.00, desc: "Sabor Canela ou Mel", image: IMG_CACHACA, available: true, flavors: "Fire (Canela), Honey (Mel)" },
+      { id: 1127, name: "Combo Jack Daniel's Fire / Honey", category: "Combos", price: 215.00, desc: "1 Jack Fire/Honey + 4 Red Bull + Gelo", image: IMG_COMBO, available: true },
+      { id: 1128, name: "Whisky Jack Daniel's Apple 1L", category: "Destilados", price: 200.00, desc: "Sabor Maçã Verde", image: IMG_CACHACA, available: true },
+      { id: 1129, name: "Combo Jack Daniel's Apple", category: "Combos", price: 240.00, desc: "1 Jack Apple + 4 Red Bull + Gelo", image: IMG_COMBO, available: true },
+      { id: 1130, name: "Whisky Old Parr 12 Anos 1L", category: "Destilados", price: 170.00, desc: "Grand Old Parr 12 Anos", image: IMG_CACHACA, available: true },
+      { id: 1131, name: "Combo Old Parr 12 Anos", category: "Combos", price: 210.00, desc: "1 Old Parr 12A + 4 Red Bull + Gelo de Coco", image: IMG_COMBO, available: true },
+      { id: 1132, name: "Whisky Old Star", category: "Destilados", price: 20.00, desc: "Garrafa de Whisky Nacional", image: IMG_CACHACA, available: true },
+      { id: 1133, name: "Combo Old Star", category: "Combos", price: 40.00, desc: "1 Old Star + Energético 2L + Gelo", image: IMG_COMBO, available: true },
+      { id: 1134, name: "Whisky Passport Scotch 1L", category: "Destilados", price: 55.00, desc: "Garrafa 1L", image: IMG_CACHACA, available: true },
+      { id: 1135, name: "Combo Passport + Vibe 2L", category: "Combos", price: 75.00, desc: "1 Passport 1L + Energético Vibe 2L + Gelo", image: IMG_COMBO, available: true },
+      { id: 1136, name: "Combo Passport + Red Bull", category: "Combos", price: 105.00, desc: "1 Passport 1L + 4 Red Bull + Gelo", image: IMG_COMBO, available: true },
+      { id: 1137, name: "Whisky Passport Maçã / Mel 670ml", category: "Destilados", price: 60.00, desc: "Saborizado Honey ou Green Apple", image: IMG_CACHACA, available: true, flavors: "Honey (Mel), Green Apple (Maçã Verde)" },
+      { id: 1138, name: "Combo Passport Maçã/Mel + Vibe", category: "Combos", price: 75.00, desc: "1 Passport Sabores + Energético 2L + Gelo", image: IMG_COMBO, available: true },
+      { id: 1139, name: "Combo Passport Maçã/Mel + Red Bull", category: "Combos", price: 105.00, desc: "1 Passport Sabores + 4 Red Bull + Gelo", image: IMG_COMBO, available: true },
+      { id: 1140, name: "Whisky Red Label 1L", category: "Destilados", price: 100.00, desc: "Johnnie Walker Red Label 1L", image: IMG_CACHACA, available: true },
+      { id: 1141, name: "Combo Red Label + Vibe 2L", category: "Combos", price: 125.00, desc: "1 Red Label 1L + Energético Vibe 2L + Gelo", image: IMG_COMBO, available: true },
+      { id: 1142, name: "Combo Red Label + Red Bull", category: "Combos", price: 150.00, desc: "1 Red Label 1L + 4 Red Bull + Gelo de Coco", image: IMG_COMBO, available: true }
     ];
 
     let products = [];
@@ -1339,10 +1351,42 @@
       }
     }
 
+    // PRESERVA AS FOTOS E INFORMAÇÕES EXISTENTES DOS PRODUTOS MESMO AO CARREGAR
     function resetDefaultProducts() {
       if(currentUserRole !== 'owner') return alert("Apenas o gestor pode recarregar os produtos.");
-      db.ref('products').set(DEFAULT_PRODUCTS).then(() => {
-        alert("Todos os produtos foram recarregados com sucesso!");
+
+      // Busca os produtos já armazenados no Firebase
+      db.ref('products').once('value', (snapshot) => {
+        const existingData = snapshot.val();
+        let existingMap = {};
+
+        if (existingData) {
+          Object.keys(existingData).forEach(key => {
+            const p = existingData[key];
+            if (p && p.id) {
+              existingMap[p.id] = p;
+            }
+          });
+        }
+
+        // Se o produto já possui foto/dados personalizados cadastrados no banco, preserva.
+        const updatedList = DEFAULT_PRODUCTS.map(defP => {
+          const existingP = existingMap[defP.id];
+          if (existingP) {
+            return {
+              ...defP,
+              image: (existingP.image && existingP.image.trim() !== '') ? existingP.image : defP.image,
+              price: existingP.price || defP.price,
+              options: existingP.options || defP.options,
+              flavors: existingP.flavors || defP.flavors
+            };
+          }
+          return defP;
+        });
+
+        db.ref('products').set(updatedList).then(() => {
+          alert("Produtos recarregados mantendo as fotos e edições salvas com sucesso!");
+        });
       });
     }
 
@@ -2221,7 +2265,7 @@
       }
     }
 
-    // CORREÇÃO CRÍTICA DA TABELA DE PRODUTOS PARA PERMITIR EDICÃO E EXCLUSÃO
+    // GESTÃO E EDIÇÃO CORRIGIDA DE PRODUTOS
     function renderAdminProducts() {
       const tbody = document.getElementById('admin-products-table');
       if (!tbody) return;
@@ -2252,20 +2296,31 @@
       `).join('');
     }
 
+    function clearProductForm() {
+      const form = document.getElementById('product-form');
+      if (form) form.reset();
+
+      document.getElementById('edit-firebase-key').value = '';
+      document.getElementById('edit-id').value = '';
+      document.getElementById('edit-image-url').value = '';
+      document.getElementById('file-input').value = '';
+      
+      currentImageBase64 = '';
+      setPreviewImage('');
+    }
+
     function openProductByIndex(index) {
       if (currentUserRole !== 'owner') {
         return alert("Apenas o Dono pode editar ou adicionar produtos.");
       }
 
       const p = products[index];
-      if (!p) return;
+      if (!p) return alert("Erro ao carregar produto.");
 
-      const modal = document.getElementById('product-modal');
-      const form = document.getElementById('product-form');
-      form.reset();
+      clearProductForm();
 
       document.getElementById('edit-firebase-key').value = p.firebaseKey || '';
-      document.getElementById('edit-id').value = p.id;
+      document.getElementById('edit-id').value = p.id || Date.now();
       document.getElementById('edit-name').value = p.name || '';
       document.getElementById('edit-category').value = p.category || 'Combos';
       document.getElementById('edit-price').value = p.price || 0;
@@ -2278,7 +2333,7 @@
       setPreviewImage(p.image || '');
 
       document.getElementById('modal-product-title').innerText = "Editar: " + p.name;
-      modal.classList.remove('hidden');
+      document.getElementById('product-modal').classList.remove('hidden');
     }
 
     function openProductModal() {
@@ -2286,17 +2341,16 @@
         return alert("Apenas o Dono pode editar ou adicionar produtos.");
       }
 
-      const modal = document.getElementById('product-modal');
-      const form = document.getElementById('product-form');
-      form.reset();
-      currentImageBase64 = '';
-      setPreviewImage('');
+      clearProductForm();
 
-      document.getElementById('edit-firebase-key').value = '';
       document.getElementById('edit-id').value = Date.now();
       document.getElementById('modal-product-title').innerText = "Novo Produto";
-      
-      modal.classList.remove('hidden');
+      document.getElementById('product-modal').classList.remove('hidden');
+    }
+
+    function closeProductModal() {
+      document.getElementById('product-modal').classList.add('hidden');
+      clearProductForm();
     }
 
     function deleteProductByIndex(index) {
@@ -2320,8 +2374,6 @@
       }
     }
 
-    function closeProductModal() { document.getElementById('product-modal').classList.add('hidden'); }
-
     function handleImageUpload(event) {
       const file = event.target.files[0];
       if (!file) return;
@@ -2343,26 +2395,30 @@
       const img = document.getElementById('image-preview');
       const placeholder = document.getElementById('image-preview-placeholder');
       if (src) { img.src = src; img.classList.remove('hidden'); placeholder.classList.add('hidden'); }
-      else { img.src = ''; img.classList.add('hidden'); placeholder.remove('hidden'); }
+      else { img.src = ''; img.classList.add('hidden'); placeholder.classList.remove('hidden'); }
     }
 
     function saveProduct(event) {
       event.preventDefault();
       if(currentUserRole !== 'owner') return alert("Apenas o Dono pode alterar o estoque.");
 
-      const key = document.getElementById('edit-firebase-key').value;
+      const key = document.getElementById('edit-firebase-key').value.trim();
       const id = parseInt(document.getElementById('edit-id').value) || Date.now();
-      const name = document.getElementById('edit-name').value;
+      const name = document.getElementById('edit-name').value.trim();
       const category = document.getElementById('edit-category').value;
-      const price = parseFloat(document.getElementById('edit-price').value);
+      const price = parseFloat(document.getElementById('edit-price').value) || 0;
       const options = document.getElementById('edit-options').value.trim();
       const flavors = document.getElementById('edit-flavors').value.trim();
-      const desc = document.getElementById('edit-desc').value;
-      const image = currentImageBase64 || document.getElementById('edit-image-url').value;
+      const desc = document.getElementById('edit-desc').value.trim();
+      const image = currentImageBase64 || document.getElementById('edit-image-url').value.trim();
 
       const productData = { id, name, category, price, options, flavors, desc, image, available: true };
-      if(key) db.ref(`products/${key}`).update(productData).then(closeProductModal);
-      else db.ref('products').push(productData).then(closeProductModal);
+
+      if(key) {
+        db.ref(`products/${key}`).update(productData).then(closeProductModal);
+      } else {
+        db.ref('products').push(productData).then(closeProductModal);
+      }
     }
 
     function renderPdvProducts() {
