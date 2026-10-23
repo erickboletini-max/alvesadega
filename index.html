@@ -815,8 +815,6 @@
     const db = firebase.database();
 
     const STORE_WHATSAPP_NUMBER = "5511913356978"; 
-    
-    // CONFIGURAÇÕES DISTANCE MATRIX AI
     const DISTANCE_MATRIX_API_KEY = "UGobjwSKXX2sU5px1fH8r1OOhtNfoF4xgU83DpGJdS3Qm5NCj0M3K4oSSIZlg5Ag";
     const STORE_ADDRESS_ORIGIN = "Rua São Bernardo do Campo, 210, Jandira, SP, Brasil";
 
@@ -1182,11 +1180,9 @@
           : "text-xs px-2.5 py-0.5 rounded-full font-bold bg-blue-500/20 text-blue-400 border border-blue-500/30";
       }
 
-      // Oculta APENAS Produtos e Configurações para o Funcionário
       document.getElementById('tab-produtos-btn')?.classList.toggle('hidden', !isOwner);
       document.getElementById('tab-config-btn')?.classList.toggle('hidden', !isOwner);
 
-      // Oculta botões de adicionar e resetar estoque no topo
       document.getElementById('btn-owner-add-product')?.classList.toggle('hidden', !isOwner);
       document.getElementById('btn-owner-reset-products')?.classList.toggle('hidden', !isOwner);
 
@@ -1237,7 +1233,6 @@
         updateSalesMetrics();
         updateMotoboyReport();
 
-        // Se estiver com a aba de busca aberta, atualiza a busca em tempo real
         if (!document.getElementById('admin-tab-buscar').classList.contains('hidden')) {
           adminSearchOrder();
         }
@@ -1273,7 +1268,6 @@
       });
     });
 
-    // CÁLCULO DE DISTÂNCIA E FRETE USANDO A API DISTANCEMATRIX.AI
     function handleAddressTyping() {
       clearTimeout(typingTimer);
       typingTimer = setTimeout(() => {
@@ -1813,7 +1807,6 @@
       }
     }
 
-    // ABA BUSCAR PEDIDO COM ALTERAÇÃO DE STATUS
     function adminSearchOrder() {
       const term = document.getElementById('admin-search-order-input').value.trim().toLowerCase();
       const container = document.getElementById('admin-search-results');
@@ -1857,7 +1850,6 @@
             <span class="text-emerald-400">Total: R$ ${(order.total || 0).toFixed(2)}</span>
           </div>
 
-          <!-- MUDAR STATUS DO PEDIDO DIRETAMENTE NA BUSCA -->
           <div class="bg-neutral-900 p-2 rounded-xl border border-neutral-800 space-y-1.5">
             <span class="block text-[10px] font-bold text-amber-400 uppercase">Alterar Status do Pedido:</span>
             <div class="grid grid-cols-2 sm:grid-cols-4 gap-1 text-[10px]">
@@ -2172,7 +2164,6 @@
       }
     }
 
-    // GERAÇÃO DE PDF NO FECHAMENTO DE CAIXA
     function generateSalesPDF(salesList) {
       const { jsPDF } = window.jspdf;
       const doc = new jsPDF();
@@ -2230,25 +2221,70 @@
       }
     }
 
+    // CORREÇÃO CRÍTICA DA TABELA DE PRODUTOS PARA PERMITIR EDICÃO E EXCLUSÃO
     function renderAdminProducts() {
       const tbody = document.getElementById('admin-products-table');
-      if(!tbody) return;
-      tbody.innerHTML = products.map(p => `
-        <tr>
-          <td class="p-4 font-semibold text-white flex items-center gap-3">${p.name}</td>
+      if (!tbody) return;
+
+      if (products.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-neutral-500">Nenhum produto cadastrado.</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = products.map((p, index) => `
+        <tr class="hover:bg-neutral-950/50 transition">
+          <td class="p-4 font-semibold text-white flex items-center gap-3">
+            ${p.image ? `<img src="${p.image}" class="w-8 h-8 rounded-lg object-cover">` : ''}
+            ${p.name}
+          </td>
           <td class="p-4">${p.category}</td>
           <td class="p-4 text-xs text-amber-400 font-semibold max-w-xs truncate">${p.options || p.flavors || '-'}</td>
-          <td class="p-4">R$ ${parseFloat(p.price).toFixed(2)}</td>
-          <td class="p-4 text-right">
-            <button onclick="openProductModal('${p.firebaseKey}')" class="px-2.5 py-1.5 bg-neutral-800 text-amber-400 rounded-lg text-xs font-semibold">Editar</button>
-            <button onclick="deleteProduct('${p.firebaseKey}')" class="px-2.5 py-1.5 bg-neutral-800 text-rose-400 rounded-lg text-xs font-semibold">Excluir</button>
+          <td class="p-4 font-bold text-emerald-400">R$ ${parseFloat(p.price || 0).toFixed(2)}</td>
+          <td class="p-4 text-right whitespace-nowrap">
+            <button type="button" onclick="openProductByIndex(${index})" class="px-3 py-1.5 bg-neutral-800 hover:bg-neutral-700 text-amber-400 rounded-lg text-xs font-bold transition mr-1 cursor-pointer">
+              <i class="fa-solid fa-pen-to-square mr-1"></i> Editar
+            </button>
+            <button type="button" onclick="deleteProductByIndex(${index})" class="px-3 py-1.5 bg-neutral-800 hover:bg-rose-900/50 text-rose-400 rounded-lg text-xs font-bold transition cursor-pointer">
+              <i class="fa-solid fa-trash-can mr-1"></i> Excluir
+            </button>
           </td>
         </tr>
       `).join('');
     }
 
-    function openProductModal(key = null) {
-      if(currentUserRole !== 'owner') return alert("Apenas o Dono pode editar ou adicionar produtos.");
+    function openProductByIndex(index) {
+      if (currentUserRole !== 'owner') {
+        return alert("Apenas o Dono pode editar ou adicionar produtos.");
+      }
+
+      const p = products[index];
+      if (!p) return;
+
+      const modal = document.getElementById('product-modal');
+      const form = document.getElementById('product-form');
+      form.reset();
+
+      document.getElementById('edit-firebase-key').value = p.firebaseKey || '';
+      document.getElementById('edit-id').value = p.id;
+      document.getElementById('edit-name').value = p.name || '';
+      document.getElementById('edit-category').value = p.category || 'Combos';
+      document.getElementById('edit-price').value = p.price || 0;
+      document.getElementById('edit-options').value = p.options || '';
+      document.getElementById('edit-flavors').value = p.flavors || '';
+      document.getElementById('edit-desc').value = p.desc || '';
+      document.getElementById('edit-image-url').value = p.image || '';
+      
+      currentImageBase64 = p.image || '';
+      setPreviewImage(p.image || '');
+
+      document.getElementById('modal-product-title').innerText = "Editar: " + p.name;
+      modal.classList.remove('hidden');
+    }
+
+    function openProductModal() {
+      if (currentUserRole !== 'owner') {
+        return alert("Apenas o Dono pode editar ou adicionar produtos.");
+      }
 
       const modal = document.getElementById('product-modal');
       const form = document.getElementById('product-form');
@@ -2256,26 +2292,32 @@
       currentImageBase64 = '';
       setPreviewImage('');
 
-      if(key) {
-        const p = products.find(prod => prod.firebaseKey === key);
-        if(p) {
-          document.getElementById('edit-firebase-key').value = p.firebaseKey;
-          document.getElementById('edit-id').value = p.id;
-          document.getElementById('edit-name').value = p.name;
-          document.getElementById('edit-category').value = p.category;
-          document.getElementById('edit-price').value = p.price;
-          document.getElementById('edit-options').value = p.options || '';
-          document.getElementById('edit-flavors').value = p.flavors || '';
-          document.getElementById('edit-desc').value = p.desc || '';
-          document.getElementById('edit-image-url').value = p.image || '';
-          currentImageBase64 = p.image || '';
-          setPreviewImage(p.image || '');
-        }
-      } else {
-        document.getElementById('edit-firebase-key').value = '';
-        document.getElementById('edit-id').value = Date.now();
-      }
+      document.getElementById('edit-firebase-key').value = '';
+      document.getElementById('edit-id').value = Date.now();
+      document.getElementById('modal-product-title').innerText = "Novo Produto";
+      
       modal.classList.remove('hidden');
+    }
+
+    function deleteProductByIndex(index) {
+      if (currentUserRole !== 'owner') {
+        return alert("Apenas o Dono pode excluir produtos.");
+      }
+
+      const p = products[index];
+      if (!p) return;
+
+      if (confirm(`Excluir o produto "${p.name}"?`)) {
+        if (p.firebaseKey) {
+          db.ref(`products/${p.firebaseKey}`).remove();
+        } else {
+          db.ref('products').orderByChild('id').equalTo(p.id).once('value', snapshot => {
+            snapshot.forEach(childSnapshot => {
+              childSnapshot.ref.remove();
+            });
+          });
+        }
+      }
     }
 
     function closeProductModal() { document.getElementById('product-modal').classList.add('hidden'); }
@@ -2321,11 +2363,6 @@
       const productData = { id, name, category, price, options, flavors, desc, image, available: true };
       if(key) db.ref(`products/${key}`).update(productData).then(closeProductModal);
       else db.ref('products').push(productData).then(closeProductModal);
-    }
-
-    function deleteProduct(key) {
-      if(currentUserRole !== 'owner') return alert("Apenas o Dono pode excluir produtos.");
-      if(confirm('Excluir este produto?')) db.ref(`products/${key}`).remove();
     }
 
     function renderPdvProducts() {
